@@ -1,0 +1,320 @@
+.order-success-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  .order-success-content {
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+  }
+  
+  /* Шапка страницы успешного заказа */
+  .order-success-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  
+  .success-icon {
+    display: inline-flex;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #4cd3c2;
+    color: white;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .success-icon svg {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .order-success-header h1 {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  .success-message {
+    font-size: 1.1rem;
+    color: #666;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  /* Карточка с деталями заказа */
+  .order-details-card {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 3rem;
+  }
+  
+  .order-details-card h2 {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 1.5rem;
+  }
+  
+  .order-details-card h3 {
+    font-size: 1.2rem;
+    color: #444;
+    margin: 1.5rem 0 1rem;
+  }
+  
+  /* Информация о заказе */
+  .order-info {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .order-info-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+  
+  .order-info-row:last-child {
+    margin-bottom: 0;
+  }
+  
+  .label {
+    color: #666;
+    min-width: 150px;
+  }
+  
+  .value {
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .order-id {
+    font-weight: bold;
+    color: #e84393;
+  }
+  
+  .status {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background-color: #e6f7f5;
+    color: #4cd3c2;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+  
+  /* Блоки с информацией */
+  .info-box {
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    padding: 1.25rem;
+  }
+  
+  .info-item {
+    display: flex;
+    margin-bottom: 0.75rem;
+  }
+  
+  .info-item:last-child {
+    margin-bottom: 0;
+  }
+  
+  .payment-method {
+    font-weight: 500;
+  }
+  
+  /* Список товаров */
+  .items-list {
+    margin-bottom: 1.5rem;
+  }
+  
+  .order-item-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .order-item-row:last-child {
+    border-bottom: none;
+  }
+  
+  .item-name {
+    flex: 1;
+    color: #333;
+  }
+  
+  .item-details {
+    display: flex;
+    gap: 1.5rem;
+  }
+  
+  .item-quantity {
+    color: #666;
+    min-width: 60px;
+    text-align: right;
+  }
+  
+  .item-price {
+    font-weight: 500;
+    color: #333;
+    min-width: 80px;
+    text-align: right;
+  }
+  
+  .order-total {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #ddd;
+    font-size: 1.1rem;
+  }
+  
+  .order-total .value {
+    font-weight: bold;
+    color: #e84393;
+  }
+  
+  /* Секция "Что дальше" */
+  .whats-next {
+    margin-bottom: 3rem;
+  }
+  
+  .whats-next h2 {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  .steps-container {
+    display: flex;
+    gap: 1.5rem;
+  }
+  
+  .step-item {
+    flex: 1;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    position: relative;
+  }
+  
+  .step-number {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #e84393;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+  }
+  
+  .step-content {
+    text-align: center;
+    padding-top: 0.5rem;
+  }
+  
+  .step-content h4 {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 0.75rem;
+  }
+  
+  .step-content p {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  
+  /* Кнопки действий */
+  .order-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+  
+  .order-actions .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s;
+  }
+  
+  .btn.primary {
+    background-color: #e84393;
+    color: white;
+  }
+  
+  .btn.primary:hover {
+    background-color: #d33682;
+  }
+  
+  .btn.secondary {
+    background-color: #f0f0f0;
+    color: #555;
+  }
+  
+  .btn.secondary:hover {
+    background-color: #e0e0e0;
+    color: #333;
+  }
+  
+  /* Состояние загрузки */
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50vh;
+    font-size: 1.2rem;
+    color: #666;
+  }
+  
+  /* Адаптивная верстка */
+  @media (max-width: 768px) {
+    .steps-container {
+      flex-direction: column;
+    }
+    
+    .order-info-row,
+    .info-item {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .label {
+      margin-bottom: 0.25rem;
+    }
+    
+    .order-item-row {
+      flex-direction: column;
+    }
+    
+    .item-details {
+      margin-top: 0.5rem;
+      justify-content: space-between;
+    }
+    
+    .order-actions {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .order-actions .btn {
+      width: 100%;
+      text-align: center;
+    }
+  }

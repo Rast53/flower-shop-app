@@ -1,0 +1,137 @@
+.footer {
+    background-color: #f9f9f9;
+    color: #333;
+    padding: 3rem 0 0;
+    margin-top: 4rem;
+  }
+  
+  .footer-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  .footer-section {
+    flex: 1;
+    min-width: 240px;
+    margin-bottom: 2rem;
+    padding-right: 2rem;
+  }
+  
+  .footer-section h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #e84393;
+  }
+  
+  .footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .footer-links li {
+    margin-bottom: 0.5rem;
+  }
+  
+  .footer-links a {
+    text-decoration: none;
+    color: #333;
+    transition: color 0.3s;
+  }
+  
+  .footer-links a:hover {
+    color: #e84393;
+  }
+  
+  address {
+    font-style: normal;
+    line-height: 1.6;
+  }
+  
+  address a {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  
+  address a:hover {
+    color: #e84393;
+  }
+  
+  .social-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: #fff;
+    border-radius: 50%;
+    color: #333;
+    transition: background-color 0.3s, color 0.3s, transform 0.3s;
+    text-decoration: none;
+  }
+  
+  .social-link:hover {
+    background-color: #e84393;
+    color: #fff;
+    transform: translateY(-3px);
+  }
+  
+  .footer-bottom {
+    border-top: 1px solid #ddd;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .footer-bottom p {
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+  }
+  
+  .footer-bottom-links {
+    display: flex;
+    gap: 1.5rem;
+  }
+  
+  .footer-bottom-links a {
+    color: #333;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s;
+  }
+  
+  .footer-bottom-links a:hover {
+    color: #e84393;
+  }
+  
+  /* Для устройств с маленьким экраном */
+  @media (max-width: 768px) {
+    .footer-section {
+      flex-basis: 100%;
+      padding-right: 0;
+    }
+    
+    .footer-bottom {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .footer-bottom-links {
+      margin-top: 1rem;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
