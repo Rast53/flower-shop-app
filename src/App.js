@@ -23,7 +23,7 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import OrdersHistoryPage from './pages/OrdersHistoryPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminProducts from './pages/admin/AdminProducts';
+import AdminFlowers from './pages/admin/AdminFlowers';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminUsers from './pages/admin/AdminUsers';
 import NotFoundPage from './pages/NotFoundPage';
@@ -79,7 +79,7 @@ function App() {
                 } />
                 <Route path="/admin/products" element={
                   <AdminRoute>
-                    <AdminProducts />
+                    <AdminFlowers />
                   </AdminRoute>
                 } />
                 <Route path="/admin/orders" element={

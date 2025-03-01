@@ -1,98 +1,90 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { flowerApi } from '../services/api';
 import { useCart } from '../hooks/useCart';
+import { flowerApi } from '../services/api';
 import '../styles/ProductPage.css';
 
+/**
+ * Компонент ProductPage - страница с подробной информацией о товаре
+ */
 const ProductPage = () => {
   const { id } = useParams();
-  const { addToCart } = useCart();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   
-  const [flower, setFlower] = useState(null);
-  const [category, setCategory] = useState(null);
+  // Состояние для хранения данных
+  const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [relatedFlowers, setRelatedFlowers] = useState([]);
-
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  
+  // Загружаем данные о товаре при монтировании компонента
   useEffect(() => {
-    const fetchFlower = async () => {
+    const fetchProductData = async () => {
       try {
         setLoading(true);
         
-        // Получаем данные о цветке
+        // Получаем информацию о товаре
         const response = await flowerApi.getById(id);
-        setFlower(response.data);
+        setProduct(response.data);
         
-        // Если есть категория, получаем данные о ней
+        // Получаем связанные товары из той же категории
         if (response.data.category_id) {
-          const categoryResponse = await fetch(`/api/categories/${response.data.category_id}`);
-          const categoryData = await categoryResponse.json();
-          setCategory(categoryData);
-          
-          // Получаем связанные цветы из той же категории
-          const relatedResponse = await flowerApi.getAll(response.data.category_id);
-          
-          // Исключаем текущий цветок из списка связанных и ограничиваем 4 элементами
-          const filtered = relatedResponse.data
-            .filter(item => item.id !== parseInt(id))
-            .slice(0, 4);
-            
-          setRelatedFlowers(filtered);
+          const relatedResponse = await flowerApi.getAll({
+            category_id: response.data.category_id,
+            exclude_id: id,
+            limit: 4
+          });
+          setRelatedProducts(relatedResponse.data);
         }
         
         setError(null);
       } catch (err) {
-        console.error('Ошибка при загрузке данных о цветке:', err);
-        setError('Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже.');
+        console.error('Ошибка при загрузке товара:', err);
+        setError('Не удалось загрузить информацию о товаре. Пожалуйста, попробуйте позже.');
       } finally {
         setLoading(false);
       }
     };
-
-    fetchFlower();
+    
+    fetchProductData();
   }, [id]);
-
-  // Увеличение количества
-  const incrementQuantity = () => {
-    if (flower && quantity < flower.stock_quantity) {
-      setQuantity(prevQuantity => prevQuantity + 1);
-    }
-  };
-
-  // Уменьшение количества
-  const decrementQuantity = () => {
-    if (quantity > 1) {
-      setQuantity(prevQuantity => prevQuantity - 1);
-    }
-  };
-
-  // Обработчик изменения количества
+  
+  // Обработчик изменения количества товара
   const handleQuantityChange = (e) => {
     const value = parseInt(e.target.value);
-    if (!isNaN(value) && value > 0 && flower && value <= flower.stock_quantity) {
+    if (value > 0 && value <= 99) {
       setQuantity(value);
     }
   };
-
+  
+  // Увеличение количества товара
+  const incrementQuantity = () => {
+    if (quantity < 99) {
+      setQuantity(prev => prev + 1);
+    }
+  };
+  
+  // Уменьшение количества товара
+  const decrementQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(prev => prev - 1);
+    }
+  };
+  
   // Добавление товара в корзину
   const handleAddToCart = () => {
-    if (flower) {
-      addToCart(flower, quantity);
-      // Можно добавить уведомление о добавлении товара в корзину
+    if (product) {
+      addToCart(product, quantity);
+      
+      // Показываем уведомление
+      alert(`${quantity} шт. "${product.name}" добавлено в корзину`);
     }
   };
-
-  // Обработчик кнопки "Купить сейчас"
-  const handleBuyNow = () => {
-    if (flower) {
-      addToCart(flower, quantity);
-      navigate('/checkout');
-    }
-  };
-
-  if (loading) {
+  
+  // Если данные загружаются, показываем индикатор загрузки
+  if (loading && !product) {
     return (
       <div className="loading-container">
         <div className="loader"></div>
@@ -100,11 +92,25 @@ const ProductPage = () => {
       </div>
     );
   }
-
-  if (error || !flower) {
+  
+  // Если произошла ошибка, показываем сообщение
+  if (error) {
     return (
       <div className="error-container">
-        <p className="error-message">{error || 'Товар не найден'}</p>
+        <p className="error-message">{error}</p>
+        <button className="reload-button" onClick={() => window.location.reload()}>
+          Попробовать снова
+        </button>
+      </div>
+    );
+  }
+  
+  // Если товар не найден, показываем соответствующее сообщение
+  if (!product) {
+    return (
+      <div className="not-found-container">
+        <h2>Товар не найден</h2>
+        <p>К сожалению, запрашиваемый вами товар не существует или был удален.</p>
         <Link to="/catalog" className="btn btn-primary">
           Вернуться в каталог
         </Link>
@@ -114,113 +120,145 @@ const ProductPage = () => {
 
   return (
     <div className="product-page">
+      {/* Хлебные крошки */}
       <div className="breadcrumbs">
-        <Link to="/">Главная</Link> &gt; 
-        <Link to="/catalog">Каталог</Link> &gt; 
-        {category && <Link to={`/catalog/${category.id}`}>{category.name}</Link>} &gt; 
-        <span>{flower.name}</span>
+        <Link to="/">Главная</Link>
+        <span className="separator">/</span>
+        <Link to="/catalog">Каталог</Link>
+        {product.category && (
+          <>
+            <span className="separator">/</span>
+            <Link to={`/catalog/${product.category_id}`}>{product.category.name}</Link>
+          </>
+        )}
+        <span className="separator">/</span>
+        <span className="current">{product.name}</span>
       </div>
       
-      <div className="product-container">
+      {/* Основная информация о товаре */}
+      <div className="product-details">
         <div className="product-gallery">
           <div className="main-image">
-            <img src={flower.image_url || '/images/flower-placeholder.jpg'} alt={flower.name} />
+            <img 
+              src={product.image_url || '/images/flower-placeholder.jpg'} 
+              alt={product.name}
+            />
           </div>
         </div>
         
         <div className="product-info">
-          <h1 className="product-title">{flower.name}</h1>
+          <h1 className="product-title">{product.name}</h1>
           
           <div className="product-meta">
-            {category && (
-              <div className="product-category">
-                Категория: <Link to={`/catalog/${category.id}`}>{category.name}</Link>
-              </div>
+            {product.in_stock ? (
+              <span className="in-stock">В наличии</span>
+            ) : (
+              <span className="out-of-stock">Нет в наличии</span>
             )}
-            <div className="product-id">
-              Артикул: {flower.id}
-            </div>
+            
+            {product.article && (
+              <span className="product-article">Артикул: {product.article}</span>
+            )}
           </div>
           
           <div className="product-price">
-            {flower.price} ₽
-          </div>
-          
-          <div className="product-stock">
-            <span className={`stock-status ${flower.stock_quantity > 0 ? 'in-stock' : 'out-of-stock'}`}>
-              {flower.stock_quantity > 0 ? 'В наличии' : 'Нет в наличии'}
-            </span>
-            {flower.stock_quantity > 0 && <span className="stock-quantity">({flower.stock_quantity} шт.)</span>}
+            {product.price.toLocaleString()} ₽
+            {product.old_price && (
+              <span className="old-price">{product.old_price.toLocaleString()} ₽</span>
+            )}
           </div>
           
           <div className="product-description">
-            <h3>Описание</h3>
-            <p>{flower.description || 'Описание отсутствует'}</p>
+            <p>{product.description}</p>
           </div>
           
-          {flower.stock_quantity > 0 && (
-            <div className="product-actions">
-              <div className="quantity-controls">
-                <button 
-                  className="quantity-btn decrement" 
-                  onClick={decrementQuantity}
-                  disabled={quantity <= 1}
-                >
-                  -
-                </button>
-                <input 
-                  type="number" 
-                  min="1" 
-                  max={flower.stock_quantity} 
-                  value={quantity} 
-                  onChange={handleQuantityChange}
-                  className="quantity-input"
-                />
-                <button 
-                  className="quantity-btn increment" 
-                  onClick={incrementQuantity}
-                  disabled={quantity >= flower.stock_quantity}
-                >
-                  +
-                </button>
-              </div>
-              
-              <div className="action-buttons">
-                <button 
-                  className="btn btn-primary"
-                  onClick={handleAddToCart}
-                >
-                  Добавить в корзину
-                </button>
-                <button 
-                  className="btn btn-secondary"
-                  onClick={handleBuyNow}
-                >
-                  Купить сейчас
-                </button>
-              </div>
+          {product.parameters && Object.keys(product.parameters).length > 0 && (
+            <div className="product-parameters">
+              <h3>Характеристики</h3>
+              <ul>
+                {Object.entries(product.parameters).map(([key, value]) => (
+                  <li key={key}>
+                    <span className="parameter-name">{key}:</span>
+                    <span className="parameter-value">{value}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
+          
+          {/* Блок с добавлением в корзину */}
+          <div className="add-to-cart-block">
+            <div className="quantity-control">
+              <button 
+                className="quantity-btn decrement" 
+                onClick={decrementQuantity}
+                disabled={quantity <= 1}
+              >
+                −
+              </button>
+              <input 
+                type="number" 
+                value={quantity} 
+                onChange={handleQuantityChange}
+                min="1" 
+                max="99"
+              />
+              <button 
+                className="quantity-btn increment" 
+                onClick={incrementQuantity}
+                disabled={quantity >= 99}
+              >
+                +
+              </button>
+            </div>
+            
+            <button 
+              className="btn btn-primary add-to-cart"
+              onClick={handleAddToCart}
+              disabled={!product.in_stock}
+            >
+              {product.in_stock ? 'Добавить в корзину' : 'Товар закончился'}
+            </button>
+          </div>
+          
+          {/* Доставка и оплата */}
+          <div className="product-delivery-info">
+            <h3>Доставка и оплата</h3>
+            <ul>
+              <li>Доставка по Москве и области в течение 24 часов</li>
+              <li>Возможность оплаты онлайн и при получении</li>
+              <li>Гарантия свежести цветов до 7 дней</li>
+            </ul>
+          </div>
         </div>
       </div>
       
-      {relatedFlowers.length > 0 && (
+      {/* Связанные товары */}
+      {relatedProducts.length > 0 && (
         <div className="related-products">
-          <h2>Похожие товары</h2>
+          <h2>Вам также может понравиться</h2>
           <div className="related-products-grid">
-            {relatedFlowers.map(relatedFlower => (
-              <div key={relatedFlower.id} className="related-product-card">
-                <Link to={`/product/${relatedFlower.id}`} className="related-product-image">
-                  <img src={relatedFlower.image_url || '/images/flower-placeholder.jpg'} alt={relatedFlower.name} />
+            {relatedProducts.map(related => (
+              <div key={related.id} className="related-product-card">
+                <Link to={`/product/${related.id}`} className="related-product-image">
+                  <img 
+                    src={related.image_url || '/images/flower-placeholder.jpg'} 
+                    alt={related.name} 
+                  />
                 </Link>
                 <div className="related-product-details">
                   <h3>
-                    <Link to={`/product/${relatedFlower.id}`}>{relatedFlower.name}</Link>
+                    <Link to={`/product/${related.id}`}>{related.name}</Link>
                   </h3>
-                  <p className="related-product-price">{relatedFlower.price} ₽</p>
+                  <div className="related-product-price">
+                    {related.price.toLocaleString()} ₽
+                  </div>
                   <button 
-                    className="btn btn-primary btn-sm"
-                    onClick={() => addToCart(relatedFlower, 1)}
+                    className="btn btn-secondary add-to-cart-sm"
+                    onClick={() => {
+                      addToCart(related, 1);
+                      alert(`"${related.name}" добавлен в корзину`);
+                    }}
                   >
                     В корзину
                   </button>

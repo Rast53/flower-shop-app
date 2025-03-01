@@ -1,0 +1,89 @@
+.not-found-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+}
+
+.not-found-container {
+  text-align: center;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  max-width: 500px;
+  width: 100%;
+}
+
+.not-found-icon {
+  margin-bottom: 20px;
+}
+
+.not-found-icon .material-icons {
+  font-size: 72px;
+  color: #e84393;
+  opacity: 0.8;
+}
+
+.not-found-container h1 {
+  font-size: 80px;
+  font-weight: 800;
+  color: #e84393;
+  margin: 0;
+  line-height: 1;
+}
+
+.not-found-container h2 {
+  font-size: 24px;
+  color: #333;
+  margin: 10px 0 20px;
+}
+
+.not-found-container p {
+  color: #666;
+  margin-bottom: 30px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #e84393;
+  color: #fff;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #d13680;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(232, 67, 147, 0.2);
+}
+
+/* Стили для темной темы Telegram */
+@media (prefers-color-scheme: dark) {
+  .not-found-container {
+    background-color: #222;
+  }
+  
+  .not-found-container h2 {
+    color: #fff;
+  }
+  
+  .not-found-container p {
+    color: #ccc;
+  }
+} 

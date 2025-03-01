@@ -1,0 +1,547 @@
+/* Стили для страницы управления заказами */
+.admin-orders {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Заголовок и фильтры */
+.admin-header {
+  margin-bottom: 25px;
+}
+
+.admin-header h1 {
+  margin: 0 0 20px 0;
+  font-size: 28px;
+  color: #2c3e50;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 300px;
+  position: relative;
+}
+
+.search-box .material-icons {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #95a5a6;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 10px 10px 40px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: #e84393;
+}
+
+.status-filter {
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  min-width: 150px;
+  background-color: white;
+}
+
+.status-filter:focus {
+  outline: none;
+  border-color: #e84393;
+}
+
+/* Таблица заказов */
+.orders-table-container {
+  overflow-x: auto;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.orders-table th {
+  padding: 15px;
+  text-align: left;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.orders-table td {
+  padding: 15px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.orders-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Информация о клиенте в таблице */
+.customer-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.customer-name {
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+
+.customer-phone {
+  font-size: 13px;
+  color: #7f8c8d;
+}
+
+/* Статус заказа */
+.status-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-pending {
+  background-color: #fff8e1;
+  color: #ff9800;
+}
+
+.status-confirmed {
+  background-color: #e3f2fd;
+  color: #2196f3;
+}
+
+.status-shipped {
+  background-color: #e8f5e9;
+  color: #4caf50;
+}
+
+.status-delivered {
+  background-color: #e0f2f1;
+  color: #009688;
+}
+
+.status-canceled {
+  background-color: #fce4ec;
+  color: #e91e63;
+}
+
+/* Кнопки действий */
+.action-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 4px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.action-btn .material-icons {
+  font-size: 18px;
+}
+
+.view-btn:hover {
+  background-color: #e3f2fd;
+  color: #2196f3;
+}
+
+.edit-status-btn:hover {
+  background-color: #e8f5e9;
+  color: #4caf50;
+}
+
+/* Состояние без результатов */
+.no-results {
+  text-align: center;
+  padding: 30px !important;
+  color: #7f8c8d;
+}
+
+.no-results .material-icons {
+  font-size: 36px;
+  margin-bottom: 10px;
+  color: #95a5a6;
+}
+
+.no-results p {
+  margin: 5px 0 0;
+  font-size: 15px;
+}
+
+/* Модальное окно с деталями заказа */
+.order-details-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1002;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #2c3e50;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #7f8c8d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #e74c3c;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eaeaea;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Секции информации в модальном окне */
+.order-info-section,
+.customer-info-section,
+.order-items-section {
+  margin-bottom: 25px;
+}
+
+.order-info-section h3,
+.customer-info-section h3,
+.order-items-section h3 {
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  color: #2c3e50;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+/* Сетка информации */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px 20px;
+}
+
+.info-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.info-label {
+  font-size: 13px;
+  color: #7f8c8d;
+  margin-bottom: 5px;
+}
+
+.info-value {
+  font-size: 15px;
+  color: #2c3e50;
+}
+
+/* Выбор статуса в модальном окне */
+.status-select select {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+}
+
+.status-select select:focus {
+  outline: none;
+  border-color: #e84393;
+}
+
+/* Таблица товаров в заказе */
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.items-table th {
+  padding: 12px 15px;
+  text-align: left;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.items-table td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.items-table tfoot {
+  font-weight: 600;
+}
+
+.total-label {
+  text-align: right;
+}
+
+.total-value {
+  color: #e84393;
+}
+
+/* Кнопки */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  border: none;
+}
+
+.btn-primary {
+  background-color: #e84393;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #d13680;
+}
+
+/* Загрузчик */
+.admin-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.admin-loader {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #e84393;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+  }
+  
+  .search-box {
+    min-width: 100%;
+  }
+  
+  .status-filter {
+    width: 100%;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .orders-table th:nth-child(2), 
+  .orders-table td:nth-child(2) {
+    display: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .orders-table th:nth-child(4), 
+  .orders-table td:nth-child(4) {
+    display: none;
+  }
+  
+  .items-table th:nth-child(2), 
+  .items-table td:nth-child(2),
+  .items-table th:nth-child(3), 
+  .items-table td:nth-child(3) {
+    display: none;
+  }
+}
+
+/* Стили для темной темы */
+@media (prefers-color-scheme: dark) {
+  .admin-orders {
+    background-color: #1a1a1a;
+    color: #f5f5f5;
+  }
+  
+  .admin-header h1 {
+    color: #f5f5f5;
+  }
+  
+  .search-box input, 
+  .status-filter,
+  .status-select select {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #f5f5f5;
+  }
+  
+  .search-box input:focus, 
+  .status-filter:focus,
+  .status-select select:focus {
+    border-color: #e84393;
+  }
+  
+  .orders-table th,
+  .items-table th {
+    background-color: #2a2a2a;
+    border-bottom-color: #444;
+    color: #f5f5f5;
+  }
+  
+  .orders-table td,
+  .items-table td {
+    border-bottom-color: #444;
+    color: #f5f5f5;
+  }
+  
+  .orders-table tbody tr:hover {
+    background-color: #2c2c2c;
+  }
+  
+  .customer-phone {
+    color: #aaa;
+  }
+  
+  .modal-content {
+    background-color: #2a2a2a;
+  }
+  
+  .modal-header,
+  .modal-footer {
+    border-color: #444;
+  }
+  
+  .modal-header h2 {
+    color: #f5f5f5;
+  }
+  
+  .order-info-section h3,
+  .customer-info-section h3,
+  .order-items-section h3 {
+    color: #f5f5f5;
+    border-bottom-color: #444;
+  }
+  
+  .info-label {
+    color: #aaa;
+  }
+  
+  .info-value {
+    color: #f5f5f5;
+  }
+  
+  .status-badge {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .status-pending {
+    color: #ffb74d;
+  }
+  
+  .status-confirmed {
+    color: #64b5f6;
+  }
+  
+  .status-shipped {
+    color: #81c784;
+  }
+  
+  .status-delivered {
+    color: #4db6ac;
+  }
+  
+  .status-canceled {
+    color: #f48fb1;
+  }
+} 

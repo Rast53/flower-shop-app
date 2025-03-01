@@ -1,0 +1,388 @@
+/* Стили для страницы управления цветами */
+.admin-flowers {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Заголовок */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.admin-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #2c3e50;
+}
+
+/* Кнопки и инструменты */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  border: none;
+}
+
+.btn .material-icons {
+  font-size: 18px;
+  margin-right: 6px;
+}
+
+.btn-primary {
+  background-color: #e84393;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #d13680;
+}
+
+/* Инструменты для фильтрации и поиска */
+.admin-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 300px;
+  position: relative;
+}
+
+.search-box .material-icons {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #95a5a6;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 10px 10px 40px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: #e84393;
+}
+
+.filter-options {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-options select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.filter-options select:focus {
+  outline: none;
+  border-color: #e84393;
+}
+
+/* Таблица цветов */
+.flowers-table-container {
+  overflow-x: auto;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.flowers-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.flowers-table th {
+  padding: 15px;
+  text-align: left;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.flowers-table td {
+  padding: 15px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.flowers-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Миниатюры изображений */
+.flower-thumbnail {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.flower-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Статус наличия товара */
+.status-badge {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.in-stock {
+  background-color: #e3f9e9;
+  color: #27ae60;
+}
+
+.out-of-stock {
+  background-color: #ffeaee;
+  color: #e74c3c;
+}
+
+/* Кнопки действий */
+.action-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 4px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.action-btn .material-icons {
+  font-size: 18px;
+}
+
+.edit-btn:hover {
+  background-color: #e3f2fd;
+  color: #2196f3;
+}
+
+.delete-btn:hover {
+  background-color: #ffebee;
+  color: #f44336;
+}
+
+/* Состояние без результатов */
+.no-results {
+  text-align: center;
+  padding: 30px !important;
+  color: #7f8c8d;
+}
+
+.no-results .material-icons {
+  font-size: 36px;
+  margin-bottom: 10px;
+  color: #95a5a6;
+}
+
+.no-results p {
+  margin: 5px 0 0;
+  font-size: 15px;
+}
+
+/* Пагинация */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #ddd;
+  background-color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #f1f1f1;
+  border-color: #ccc;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-numbers {
+  display: flex;
+  gap: 5px;
+}
+
+.pagination-number {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ddd;
+  background-color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-number:hover {
+  background-color: #f1f1f1;
+}
+
+.pagination-number.active {
+  background-color: #e84393;
+  color: white;
+  border-color: #e84393;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .admin-tools {
+    flex-direction: column;
+  }
+  
+  .search-box {
+    min-width: 100%;
+  }
+  
+  .filter-options {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .filter-options select {
+    flex: 1;
+  }
+  
+  .flowers-table th:nth-child(1), 
+  .flowers-table td:nth-child(1) {
+    display: none;
+  }
+  
+  .flowers-table th:nth-child(4), 
+  .flowers-table td:nth-child(4) {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .flowers-table th:nth-child(6), 
+  .flowers-table td:nth-child(6) {
+    display: none;
+  }
+}
+
+/* Стили для темной темы */
+@media (prefers-color-scheme: dark) {
+  .admin-flowers {
+    background-color: #1a1a1a;
+    color: #f5f5f5;
+  }
+  
+  .admin-header {
+    border-bottom-color: #333;
+  }
+  
+  .admin-header h1 {
+    color: #f5f5f5;
+  }
+  
+  .search-box input, 
+  .filter-options select {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #f5f5f5;
+  }
+  
+  .search-box input:focus, 
+  .filter-options select:focus {
+    border-color: #e84393;
+  }
+  
+  .flowers-table th {
+    background-color: #2a2a2a;
+    border-bottom-color: #444;
+    color: #f5f5f5;
+  }
+  
+  .flowers-table td {
+    border-bottom-color: #444;
+    color: #f5f5f5;
+  }
+  
+  .flowers-table tbody tr:hover {
+    background-color: #2c2c2c;
+  }
+  
+  .in-stock {
+    background-color: rgba(39, 174, 96, 0.15);
+  }
+  
+  .out-of-stock {
+    background-color: rgba(231, 76, 60, 0.15);
+  }
+  
+  .pagination-btn, 
+  .pagination-number {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #f5f5f5;
+  }
+  
+  .pagination-btn:hover:not(:disabled), 
+  .pagination-number:hover:not(.active) {
+    background-color: #333;
+  }
+} 

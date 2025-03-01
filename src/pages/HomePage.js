@@ -1,40 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { flowerApi, categoryApi } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
+import { categoryApi, flowerApi } from '../services/api';
 import '../styles/HomePage.css';
 
+/**
+ * Компонент HomePage - главная страница цветочного магазина
+ * Отображает баннер, категории, популярные товары и преимущества
+ */
 const HomePage = () => {
-  const [featuredFlowers, setFeaturedFlowers] = useState([]);
+  // Состояние для хранения данных
   const [categories, setCategories] = useState([]);
+  const [popularFlowers, setPopularFlowers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Получаем данные пользователя из контекста Auth
+  const { user } = useAuth();
 
+  // Загружаем данные при монтировании компонента
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // Загружаем популярные цветы и категории параллельно
-        const [flowersResponse, categoriesResponse] = await Promise.all([
-          flowerApi.getAll(),
-          categoryApi.getAll()
+        // Параллельно загружаем категории и популярные цветы
+        const [categoriesResponse, flowersResponse] = await Promise.all([
+          categoryApi.getAll(),
+          flowerApi.getAll({ sort: 'popularity', limit: 8 }) // Предполагаем, что API поддерживает такие параметры
         ]);
         
-        // Выбираем до 8 цветов для отображения
-        const featured = flowersResponse.data.slice(0, 8);
-        setFeaturedFlowers(featured);
         setCategories(categoriesResponse.data);
+        setPopularFlowers(flowersResponse.data);
+        setError(null);
       } catch (err) {
         console.error('Ошибка при загрузке данных:', err);
-        setError('Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже.');
+        setError('Не удалось загрузить данные. Пожалуйста, попробуйте позже.');
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchData();
   }, []);
 
+  // Если данные загружаются, показываем индикатор загрузки
   if (loading) {
     return (
       <div className="loading-container">
@@ -43,12 +53,13 @@ const HomePage = () => {
       </div>
     );
   }
-
+  
+  // Если произошла ошибка, показываем сообщение
   if (error) {
     return (
       <div className="error-container">
         <p className="error-message">{error}</p>
-        <button onClick={() => window.location.reload()} className="reload-button">
+        <button className="reload-button" onClick={() => window.location.reload()}>
           Попробовать снова
         </button>
       </div>
@@ -57,55 +68,63 @@ const HomePage = () => {
 
   return (
     <div className="home-page">
-      {/* Главный баннер */}
-      <section className="hero-banner">
+      {/* Героический баннер */}
+      <section className="hero-section">
         <div className="hero-content">
-          <h1>Свежие цветы для любого случая</h1>
-          <p>Мы доставляем радость и красоту прямо к вашей двери</p>
-          <div className="hero-buttons">
-            <Link to="/catalog" className="btn btn-primary">Перейти в каталог</Link>
-            <Link to="/contacts" className="btn btn-secondary">Связаться с нами</Link>
-          </div>
+          <h1 className="hero-title">Свежие цветы для любого случая</h1>
+          <p className="hero-subtitle">
+            Букеты и композиции ручной работы с доставкой в день заказа
+          </p>
+          <Link to="/catalog" className="hero-cta">
+            Смотреть каталог
+          </Link>
         </div>
       </section>
 
       {/* Категории цветов */}
       <section className="categories-section">
-        <div className="section-header">
-          <h2>Категории цветов</h2>
-          <Link to="/catalog" className="view-all-link">Смотреть все</Link>
-        </div>
-        
+        <h2 className="section-title">Категории цветов</h2>
         <div className="categories-grid">
-          {categories.map(category => (
-            <Link to={`/catalog/${category.id}`} key={category.id} className="category-card">
-              <div className="category-image">
-                <img src={category.image_url || '/images/category-placeholder.jpg'} alt={category.name} />
-              </div>
-              <h3>{category.name}</h3>
+          {categories.map((category) => (
+            <Link
+              key={category.id}
+              to={`/catalog/${category.id}`}
+              className="category-card"
+            >
+              <img 
+                src={category.image_url || '/images/category-placeholder.jpg'} 
+                alt={category.name}
+              />
+              <div className="category-name">{category.name}</div>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Популярные цветы */}
-      <section className="featured-flowers-section">
+      {/* Популярные товары */}
+      <section className="popular-products">
         <div className="section-header">
-          <h2>Популярные цветы</h2>
-          <Link to="/catalog" className="view-all-link">Смотреть все</Link>
+          <h2>Популярные букеты</h2>
+          <Link to="/catalog" className="view-all-link">
+            Смотреть все
+          </Link>
         </div>
-        
-        <div className="flowers-grid">
-          {featuredFlowers.map(flower => (
+        <div className="products-grid">
+          {popularFlowers.map((flower) => (
             <div key={flower.id} className="flower-card">
               <Link to={`/product/${flower.id}`} className="flower-image">
-                <img src={flower.image_url || '/images/flower-placeholder.jpg'} alt={flower.name} />
+                <img
+                  src={flower.image_url || '/images/flower-placeholder.jpg'}
+                  alt={flower.name}
+                />
               </Link>
               <div className="flower-details">
                 <h3>
                   <Link to={`/product/${flower.id}`}>{flower.name}</Link>
                 </h3>
-                <p className="flower-price">{flower.price} ₽</p>
+                <div className="flower-price">
+                  {flower.price.toLocaleString()} ₽
+                </div>
                 <Link to={`/product/${flower.id}`} className="btn btn-primary">
                   Подробнее
                 </Link>
@@ -116,40 +135,54 @@ const HomePage = () => {
       </section>
 
       {/* Преимущества */}
-      <section className="features-section">
-        <div className="feature-item">
-          <span className="material-icons">local_shipping</span>
-          <h3>Быстрая доставка</h3>
-          <p>Доставим свежие цветы в течение 2 часов по городу</p>
+      <section className="advantages-section">
+        <div className="advantage-item">
+          <div className="advantage-icon">🚚</div>
+          <h3 className="advantage-title">Быстрая доставка</h3>
+          <p className="advantage-description">
+            Доставляем букеты в течение 2 часов по всему городу
+          </p>
         </div>
         
-        <div className="feature-item">
-          <span className="material-icons">eco</span>
-          <h3>Всегда свежие</h3>
-          <p>Мы гарантируем свежесть и качество наших цветов</p>
+        <div className="advantage-item">
+          <div className="advantage-icon">🌷</div>
+          <h3 className="advantage-title">Свежие цветы</h3>
+          <p className="advantage-description">
+            Работаем только с проверенными поставщиками
+          </p>
         </div>
         
-        <div className="feature-item">
-          <span className="material-icons">volunteer_activism</span>
-          <h3>Профессиональные флористы</h3>
-          <p>Наши флористы создадут идеальный букет для любого случая</p>
+        <div className="advantage-item">
+          <div className="advantage-icon">💯</div>
+          <h3 className="advantage-title">Гарантия качества</h3>
+          <p className="advantage-description">
+            Гарантируем свежесть цветов до 7 дней
+          </p>
         </div>
         
-        <div className="feature-item">
-          <span className="material-icons">payments</span>
-          <h3>Удобная оплата</h3>
-          <p>Оплата картой, наличными или онлайн через приложение</p>
+        <div className="advantage-item">
+          <div className="advantage-icon">🎁</div>
+          <h3 className="advantage-title">Особые поводы</h3>
+          <p className="advantage-description">
+            Индивидуальный подход к каждому заказу
+          </p>
         </div>
       </section>
-      
-      {/* Призыв к действию */}
-      <section className="cta-section">
-        <div className="cta-content">
-          <h2>Заказывайте прямо сейчас</h2>
-          <p>Получите скидку 10% на первый заказ с промокодом <strong>WELCOME</strong></p>
-          <Link to="/catalog" className="btn btn-primary">Перейти в каталог</Link>
-        </div>
-      </section>
+
+      {/* Приветствие пользователя, если он авторизован */}
+      {user && (
+        <section className="cta-section">
+          <div className="cta-content">
+            <h2>Добро пожаловать, {user.name || 'пользователь'}!</h2>
+            <p>
+              Рады видеть вас снова в нашем магазине. У нас появились <strong>новые букеты</strong>, которые могут вас заинтересовать.
+            </p>
+            <Link to="/catalog" className="btn btn-primary">
+              Посмотреть новинки
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   );
 };

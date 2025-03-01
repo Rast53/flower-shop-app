@@ -1,174 +1,69 @@
-import React from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useTelegram } from '../hooks/useTelegram';
 import '../styles/OrderSuccessPage.css';
 
+/**
+ * Компонент OrderSuccessPage - страница успешного оформления заказа
+ */
 const OrderSuccessPage = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const { tg } = useTelegram();
   
-  // Получаем данные заказа из состояния навигации
-  const { orderId, orderData } = location.state || {};
-  
-  // Если нет данных заказа, перенаправляем на главную страницу
-  React.useEffect(() => {
-    if (!orderId || !orderData) {
-      navigate('/');
+  // При монтировании компонента обновляем UI Telegram Mini App
+  useEffect(() => {
+    if (tg) {
+      // Показываем кнопку "Закрыть" в Telegram
+      tg.MainButton.hide();
+      tg.BackButton.hide();
+      
+      // Отправляем событие о завершении заказа
+      tg.sendData(JSON.stringify({
+        type: 'order_completed',
+        payload: {
+          success: true,
+          timestamp: new Date().toISOString()
+        }
+      }));
     }
-  }, [orderId, orderData, navigate]);
-
-  // Если нет данных заказа, показываем сообщение о загрузке
-  if (!orderId || !orderData) {
-    return <div className="loading">Загрузка...</div>;
-  }
-
-  // Форматируем дату заказа
-  const formatDate = () => {
-    const date = new Date();
-    return new Intl.DateTimeFormat('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
-
+  }, [tg]);
+  
   return (
     <div className="order-success-page">
-      <div className="order-success-content">
-        <div className="order-success-header">
-          <div className="success-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M0 0h24v24H0V0z" fill="none"/>
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-          </div>
-          <h1>Заказ успешно оформлен!</h1>
-          <p className="success-message">
-            Спасибо за заказ! Мы уже начали его обработку.
-          </p>
+      <div className="success-container">
+        <div className="success-icon">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path 
+              d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" 
+              stroke="#28a745" 
+              strokeWidth="2" 
+              fill="#e6f7ee"
+            />
+            <path 
+              d="M8 12L11 15L16 9" 
+              stroke="#28a745" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
-
-        <div className="order-details-card">
-          <div className="order-info">
-            <h2>Информация о заказе</h2>
-            <div className="order-info-row">
-              <span className="label">Номер заказа:</span>
-              <span className="value order-id">{orderId}</span>
-            </div>
-            <div className="order-info-row">
-              <span className="label">Дата оформления:</span>
-              <span className="value">{formatDate()}</span>
-            </div>
-            <div className="order-info-row">
-              <span className="label">Статус заказа:</span>
-              <span className="value status">Новый</span>
-            </div>
-          </div>
-
-          <div className="order-delivery-info">
-            <h3>Информация о доставке</h3>
-            <div className="info-box">
-              <div className="info-item">
-                <span className="label">Способ доставки:</span>
-                <span className="value">
-                  {orderData.delivery.method === 'delivery' ? 'Доставка курьером' : 'Самовывоз'}
-                </span>
-              </div>
-              
-              {orderData.delivery.method === 'delivery' ? (
-                <>
-                  <div className="info-item">
-                    <span className="label">Адрес:</span>
-                    <span className="value">{orderData.delivery.address}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="label">Город:</span>
-                    <span className="value">{orderData.delivery.city}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="label">Индекс:</span>
-                    <span className="value">{orderData.delivery.postalCode}</span>
-                  </div>
-                </>
-              ) : (
-                <div className="info-item">
-                  <span className="label">Адрес самовывоза:</span>
-                  <span className="value">ул. Цветочная, 1</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="order-payment-info">
-            <h3>Способ оплаты</h3>
-            <div className="info-box">
-              <div className="info-item">
-                <span className="value payment-method">
-                  {orderData.payment.method === 'card' 
-                    ? 'Оплата банковской картой' 
-                    : 'Оплата наличными при получении'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="order-items-summary">
-            <h3>Товары в заказе</h3>
-            <div className="items-list">
-              {orderData.items.map((item, index) => (
-                <div className="order-item-row" key={index}>
-                  <span className="item-name">
-                    {item.name || `Товар #${item.flowerId}`}
-                  </span>
-                  <div className="item-details">
-                    <span className="item-quantity">
-                      {item.quantity} шт.
-                    </span>
-                    <span className="item-price">
-                      {item.price} ₽
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="order-total">
-              <span className="label">Итого:</span>
-              <span className="value">{orderData.totalAmount} ₽</span>
-            </div>
-          </div>
+        
+        <h1>Заказ успешно оформлен!</h1>
+        
+        <p className="success-message">
+          Спасибо за ваш заказ! Информация о заказе отправлена в Telegram.
+          В ближайшее время с вами свяжется наш менеджер для подтверждения деталей.
+        </p>
+        
+        <div className="order-details">
+          <p>Номер заказа: <strong>#{Math.floor(Math.random() * 10000).toString().padStart(4, '0')}</strong></p>
+          <p>Дата: <strong>{new Date().toLocaleDateString('ru-RU')}</strong></p>
         </div>
-
-        <div className="whats-next">
-          <h2>Что дальше?</h2>
-          <div className="steps-container">
-            <div className="step-item">
-              <div className="step-number">1</div>
-              <div className="step-content">
-                <h4>Подтверждение заказа</h4>
-                <p>Мы свяжемся с вами для подтверждения заказа в ближайшее время.</p>
-              </div>
-            </div>
-            <div className="step-item">
-              <div className="step-number">2</div>
-              <div className="step-content">
-                <h4>Обработка заказа</h4>
-                <p>Наши флористы соберут для вас букет из свежих цветов.</p>
-              </div>
-            </div>
-            <div className="step-item">
-              <div className="step-number">3</div>
-              <div className="step-content">
-                <h4>Доставка</h4>
-                <p>Мы доставим ваш заказ точно в срок или вы сможете забрать его из нашего магазина.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="order-actions">
-          <Link to="/catalog" className="btn secondary">Вернуться в каталог</Link>
-          <Link to="/" className="btn primary">На главную</Link>
+        
+        <div className="success-actions">
+          <Link to="/" className="btn btn-primary">
+            Вернуться на главную
+          </Link>
         </div>
       </div>
     </div>
