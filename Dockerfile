@@ -22,7 +22,10 @@ FROM nginx:alpine
 COPY --from=build /app/build /usr/share/nginx/html
 
 # Копируем конфигурацию NGINX
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+COPY ./default.conf /etc/nginx/nginx.conf
+
+# Удаляем дефолтную конфигурацию nginx
+RUN rm -f /etc/nginx/conf.d/default.conf
 
 # Устанавливаем рабочую директорию
 WORKDIR /usr/share/nginx/html

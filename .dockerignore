@@ -10,3 +10,9 @@ README.md
 .env.development
 .env.test
 .env.production 
+
+# Бэкапы и архивы
+*.tar
+*.tar.gz
+*.zip
+*.bak

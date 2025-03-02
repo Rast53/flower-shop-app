@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  flower-shop:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rast53/flowerapp:latest
+    container_name: flower-shop-app
+    ports:
+      - "8081:80"  # Порт для HTTP
+    restart: unless-stopped
+    depends_on:
+      - flower-backend
+      - telegram-bot
+    networks:
+      - flower-network
+    volumes:
+      - /volume2/cert/fullchain.pem:/etc/nginx/ssl/fullchain.pem
+      - /volume2/cert/privkey.pem:/etc/nginx/ssl/privkey.pem
+    env_file:
+      - .env
+
+  flower-backend:
+    image: rast53/flower-backend:latest
+    container_name: flower-backend
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - /volume2/uploads:/app/uploads
+    networks:
+      - flower-network
+
+  telegram-bot:
+    image: rast53/flower-telegram-bot:latest
+    container_name: telegram-bot
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - WEBAPP_URL=${WEBAPP_URL:-https://ra.nov.ru}
+      - API_URL=${API_URL:-http://flower-backend:3000}
+      - PORT=3000
+    volumes:
+      - ../flower-telegram-bot/data:/app/data
+      - /volume2/cert/fullchain.pem:/app/fullchain.pem
+      - /volume2/cert/privkey.pem:/app/privkey.pem
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    networks:
+      - flower-network
+    env_file:
+      - .env
+
+networks:
+  flower-network:
+    external: true 
