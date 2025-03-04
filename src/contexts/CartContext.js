@@ -102,12 +102,12 @@ export const CartProvider = ({ children }) => {
   };
 
   const value = {
-    items,
+    cart: items,
+    totalPrice: totalAmount,
     totalItems,
-    totalAmount,
-    addItem,
-    updateItemQuantity,
-    removeItem,
+    addToCart: addItem,
+    updateQuantity: updateItemQuantity,
+    removeFromCart: removeItem,
     clearCart
   };
 

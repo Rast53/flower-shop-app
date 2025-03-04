@@ -26,11 +26,16 @@ services:
     container_name: flower-backend
     restart: always
     ports:
-      - "3000:3000"
+      - "3000:3000"  # Порт для бэкенда
     env_file:
       - .env
     volumes:
-      - /volume2/uploads:/app/uploads
+      - /volume2/docker/flowerapp/uploads:/app/uploads
+      - /volume2/cert/fullchain.pem:/app/fullchain.pem
+      - /volume2/cert/privkey.pem:/app/privkey.pem
+    environment:
+      - NODE_ENV=development
+      - USE_HTTP=true
     networks:
       - flower-network
 
@@ -45,7 +50,7 @@ services:
       - API_URL=${API_URL:-http://flower-backend:3000}
       - PORT=3000
     volumes:
-      - ../flower-telegram-bot/data:/app/data
+      - /volume2/docker/flowerapp/flower-telegram-bot/data:/app/data
       - /volume2/cert/fullchain.pem:/app/fullchain.pem
       - /volume2/cert/privkey.pem:/app/privkey.pem
     healthcheck:
@@ -69,4 +74,4 @@ services:
 
 networks:
   flower-network:
-    external: true 
+    external: true  # Используем существующую внешнюю сеть   

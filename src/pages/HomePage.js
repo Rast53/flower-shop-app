@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { categoryApi, flowerApi } from '../services/api';
+import api, { categoryApi, flowerApi } from '../services/api';
 import '../styles/HomePage.css';
 
 /**
@@ -20,26 +20,25 @@ const HomePage = () => {
 
   // Загружаем данные при монтировании компонента
   useEffect(() => {
-    const fetchData = async () => {
+    async function fetchData() {
       try {
         setLoading(true);
         
-        // Параллельно загружаем категории и популярные цветы
-        const [categoriesResponse, flowersResponse] = await Promise.all([
-          categoryApi.getAll(),
-          flowerApi.getAll({ sort: 'popularity', limit: 8 }) // Предполагаем, что API поддерживает такие параметры
+        const [categoriesRes, flowersRes] = await Promise.all([
+          categoryApi.getAll().catch(err => ({ data: { data: { categories: [] } } })),
+          api.get('/flowers').catch(err => ({ data: { data: [] } }))
         ]);
         
-        setCategories(categoriesResponse.data);
-        setPopularFlowers(flowersResponse.data);
+        setCategories(categoriesRes.data?.data?.categories || []);
+        setPopularFlowers(flowersRes.data?.data || []);
         setError(null);
-      } catch (err) {
-        console.error('Ошибка при загрузке данных:', err);
+      } catch (error) {
+        console.error('Ошибка при загрузке данных:', error);
         setError('Не удалось загрузить данные. Пожалуйста, попробуйте позже.');
       } finally {
         setLoading(false);
       }
-    };
+    }
     
     fetchData();
   }, []);

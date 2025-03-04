@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useTelegram } from '../hooks/useTelegram';
 import '../styles/NotFoundPage.css';
 
 /**
@@ -8,13 +7,21 @@ import '../styles/NotFoundPage.css';
  * Отображается при переходе на несуществующий маршрут
  */
 const NotFoundPage = () => {
-  const { hideMainButton, hideBackButton } = useTelegram();
-  
-  // Скрываем кнопки Telegram при монтировании компонента
-  React.useEffect(() => {
-    hideMainButton();
-    hideBackButton();
-  }, [hideMainButton, hideBackButton]);
+  // Обработка Telegram функциональности только если она доступна
+  useEffect(() => {
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      // Скрываем основную кнопку, если она доступна
+      if (tg.MainButton && tg.MainButton.isVisible) {
+        tg.MainButton.hide();
+      }
+      
+      // Скрываем кнопку "Назад", если она доступна
+      if (tg.BackButton && tg.BackButton.isVisible) {
+        tg.BackButton.hide();
+      }
+    }
+  }, []);
 
   return (
     <div className="not-found-page">

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../hooks/useCart';
-import { categoryApi } from '../services/api';
+import api, { categoryApi } from '../services/api';
 import '../styles/Header.css';
 
 const Header = () => {
@@ -14,15 +14,16 @@ const Header = () => {
 
   // Получаем категории при загрузке компонента
   useEffect(() => {
-    const fetchCategories = async () => {
+    async function fetchCategories() {
       try {
         const response = await categoryApi.getAll();
-        setCategories(response.data);
+        console.log('Ответ API:', response.data);
+        setCategories(response.data.data.categories || []);
       } catch (error) {
-        console.error('Ошибка при загрузке категорий:', error);
+        console.error('Ошибка загрузки категорий:', error);
       }
-    };
-
+    }
+    
     fetchCategories();
   }, []);
 
@@ -65,7 +66,7 @@ const Header = () => {
                     Все цветы
                   </Link>
                 </li>
-                {categories.map((category) => (
+                {Array.isArray(categories) && categories.map((category) => (
                   <li key={category.id}>
                     <Link 
                       to={`/catalog/${category.id}`}

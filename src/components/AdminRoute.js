@@ -1,5 +1,5 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 /**
@@ -7,7 +7,13 @@ import { useAuth } from '../hooks/useAuth';
  * Пользователи без прав администратора будут перенаправлены на главную страницу
  */
 const AdminRoute = ({ children }) => {
-  const { isAuthenticated, isAdmin, loading } = useAuth();
+  const { isAuthenticated, isAdmin, loading, user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Добавляем отладочную информацию
+    console.log('AdminRoute - Auth Status:', { isAuthenticated, isAdmin, loading, user });
+  }, [isAuthenticated, isAdmin, loading, user]);
 
   // Показываем лоадер пока проверяем авторизацию
   if (loading) {
@@ -19,13 +25,15 @@ const AdminRoute = ({ children }) => {
     );
   }
 
-  // Если пользователь не авторизован, перенаправляем на страницу входа
+  // Если пользователь не авторизован, перенаправляем на страницу входа администратора
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   // Если пользователь не администратор, перенаправляем на главную страницу
   if (!isAdmin) {
+    // Добавляем сообщение об ошибке перед перенаправлением
+    alert('У вас нет прав администратора');
     return <Navigate to="/" replace />;
   }
 

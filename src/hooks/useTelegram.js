@@ -31,6 +31,16 @@ export function useTelegram() {
     tg?.MainButton.hide();
   }, [tg]);
 
+  const hideBackButton = useCallback(() => {
+    if (!tg) return;
+    
+    // В Telegram WebApp нет прямого метода для скрытия кнопки "Назад"
+    // Но можно отключить кнопку "Назад" через BackButton API, если она доступна
+    if (tg.BackButton && tg.BackButton.isVisible) {
+      tg.BackButton.hide();
+    }
+  }, [tg]);
+
   const sendData = useCallback((data) => {
     if (!tg) return;
     
@@ -60,6 +70,7 @@ export function useTelegram() {
     onToggleButton,
     showMainButton,
     hideMainButton,
+    hideBackButton,
     sendData,
     initData: tg?.initData,
     initDataUnsafe: tg?.initDataUnsafe

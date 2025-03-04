@@ -22,6 +22,10 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import OrdersHistoryPage from './pages/OrdersHistoryPage';
+import AboutPage from './pages/AboutPage';
+import ContactsPage from './pages/ContactsPage';
+import DeliveryPage from './pages/DeliveryPage';
+import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminFlowers from './pages/admin/AdminFlowers';
 import AdminOrders from './pages/admin/AdminOrders';
@@ -48,6 +52,12 @@ function App() {
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/admin/login" element={<AdminLoginPage />} />
+                
+                {/* Информационные страницы */}
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/contacts" element={<ContactsPage />} />
+                <Route path="/delivery" element={<DeliveryPage />} />
                 
                 {/* Защищенные маршруты для авторизованных пользователей */}
                 <Route path="/checkout" element={

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
-import { flowerApi, categoryApi } from '../services/api';
+import api, { flowerApi, categoryApi } from '../services/api';
 import '../styles/CatalogPage.css';
 
 /**
@@ -31,34 +31,46 @@ const CatalogPage = () => {
   // Загружаем данные при изменении URL или параметров сортировки
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      
       try {
-        setLoading(true);
+        // Если выбрана категория, загружаем цветы по категории
+        console.log('Запрос на получение цветов, категория:', activeCategory);
         
-        // Загружаем категории, если их еще нет
-        if (categories.length === 0) {
-          const categoriesResponse = await categoryApi.getAll();
-          setCategories(categoriesResponse.data);
+        let flowersResponse;
+        try {
+          if (activeCategory && activeCategory !== 'all') {
+            flowersResponse = await flowerApi.getAll({ category_id: activeCategory });
+          } else {
+            flowersResponse = await flowerApi.getAll();
+          }
+          console.log('Ответ API по цветам:', flowersResponse.data);
+        } catch (flowerError) {
+          console.error('Ошибка при загрузке цветов:', flowerError);
+          throw flowerError;
         }
         
-        // Формируем параметры запроса
-        const params = {
-          sort: sortBy,
-          min_price: priceRange.min,
-          max_price: priceRange.max
-        };
-        
-        // Если выбрана конкретная категория, добавляем её в запрос
-        if (activeCategory && activeCategory !== 'all') {
-          params.category_id = activeCategory;
+        // Получаем категории
+        let categoriesResponse;
+        try {
+          categoriesResponse = await categoryApi.getAll();
+          console.log('Ответ API по категориям:', categoriesResponse.data);
+        } catch (categoryError) {
+          console.error('Ошибка при загрузке категорий:', categoryError);
+          throw categoryError;
         }
         
-        // Получаем цветы по параметрам
-        const flowersResponse = await flowerApi.getAll(params);
-        setFlowers(flowersResponse.data);
-        setError(null);
-      } catch (err) {
-        console.error('Ошибка при загрузке данных:', err);
-        setError('Не удалось загрузить данные каталога. Пожалуйста, попробуйте позже.');
+        // Обрабатываем полученные данные
+        setFlowers(flowersResponse.data.data || []);
+        setCategories(categoriesResponse.data.data || []);
+      } catch (error) {
+        console.error("Ошибка при загрузке данных:", error);
+        if (error.response && error.response.data && error.response.data.error) {
+          setError(`Ошибка сервера: ${error.response.data.error}`);
+        } else {
+          setError("Ошибка при загрузке данных. Пожалуйста, попробуйте позже.");
+        }
       } finally {
         setLoading(false);
       }
