@@ -16,7 +16,7 @@ const api = axios.create({
 // Добавляем перехватчик запросов для добавления токена авторизации
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -32,7 +32,7 @@ api.interceptors.response.use(
     // Обработка ошибки 401 (Unauthorized)
     if (error.response && error.response.status === 401) {
       // Удаляем токен при ошибке авторизации
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem('authToken');
     }
     return Promise.reject(error);
   }
@@ -44,7 +44,9 @@ export const authApi = {
   register: (userData) => api.post('/auth/register', userData),
   getMe: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/auth/me', data),
-  logout: () => api.post('/auth/logout')
+  logout: () => api.post('/auth/logout'),
+  validateToken: () => api.get('/auth/me'),
+  telegramAuth: (telegramData) => api.post('/auth/telegram', telegramData)
 };
 
 // Методы API для категорий

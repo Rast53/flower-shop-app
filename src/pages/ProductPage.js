@@ -162,7 +162,7 @@ const ProductPage = () => {
           </div>
           
           <div className="product-price">
-            {product.price.toLocaleString()} ₽
+            {product.price ? product.price.toLocaleString() : '0'} ₽
             {product.old_price && (
               <span className="old-price">{product.old_price.toLocaleString()} ₽</span>
             )}
@@ -251,7 +251,7 @@ const ProductPage = () => {
                     <Link to={`/product/${related.id}`}>{related.name}</Link>
                   </h3>
                   <div className="related-product-price">
-                    {related.price.toLocaleString()} ₽
+                    {related.price ? related.price.toLocaleString() : '0'} ₽
                   </div>
                   <button 
                     className="btn btn-secondary add-to-cart-sm"

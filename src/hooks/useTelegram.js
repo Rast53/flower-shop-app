@@ -1,11 +1,30 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 
 /**
  * Хук для работы с Telegram Mini App
  * Предоставляет доступ к объекту Telegram WebApp и его методам
  */
 export function useTelegram() {
-  const tg = window.Telegram?.WebApp;
+  const [tg, setTg] = useState(null);
+  const [user, setUser] = useState(null);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    // Проверяем, открыто ли приложение в Telegram
+    if (window.Telegram && window.Telegram.WebApp) {
+      const webApp = window.Telegram.WebApp;
+      setTg(webApp);
+      
+      // Данные пользователя Telegram
+      if (webApp.initDataUnsafe && webApp.initDataUnsafe.user) {
+        setUser(webApp.initDataUnsafe.user);
+      }
+      
+      // Сообщаем Telegram, что приложение готово
+      webApp.ready();
+      setIsReady(true);
+    }
+  }, []);
 
   const onClose = useCallback(() => {
     tg?.close();
@@ -63,7 +82,8 @@ export function useTelegram() {
 
   return {
     tg,
-    user: tg?.initDataUnsafe?.user,
+    user,
+    isReady,
     userId: tg?.initDataUnsafe?.user?.id,
     queryId: tg?.initDataUnsafe?.query_id,
     onClose,

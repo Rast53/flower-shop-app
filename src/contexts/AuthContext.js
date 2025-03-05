@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import api from '../services/api';
 import { authApi } from '../services/api';
+import { useTelegram } from '../hooks/useTelegram';
 
 // Создаем контекст аутентификации
 export const AuthContext = createContext();
@@ -10,45 +11,97 @@ export const AuthContext = createContext();
  * Управляет состоянием аутентификации пользователя и предоставляет методы для входа, выхода и регистрации
  */
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('authToken'));
+  const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user: telegramUser, isReady: isTelegramReady } = useTelegram();
 
-  // При загрузке приложения проверяем наличие токена в localStorage
-  // и пытаемся авторизовать пользователя, если токен существует
+  // Метод для телеграм-авторизации
+  const telegramAuth = async (telegramUser) => {
+    if (!telegramUser) return false;
+    
+    try {
+      console.log('Авторизация через Telegram:', telegramUser);
+      
+      // Отправляем данные пользователя Telegram на наш сервер для проверки
+      const response = await authApi.telegramAuth({
+        telegram_id: String(telegramUser.id),
+        username: telegramUser.username,
+        first_name: telegramUser.first_name,
+        last_name: telegramUser.last_name
+      });
+      
+      // Проверяем структуру ответа
+      const responseData = response.data?.data || response.data;
+      
+      if (responseData?.token || responseData?.user) {
+        const token = responseData.token;
+        const userData = responseData.user || {};
+        
+        localStorage.setItem('authToken', token);
+        setToken(token);
+        setCurrentUser(userData);
+        setIsAuthenticated(true);
+        setIsAdmin(userData.is_admin || false);
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Ошибка при авторизации через Telegram:', error);
+      return false;
+    }
+  };
+
+  // Проверка авторизации при загрузке
   useEffect(() => {
     const checkAuth = async () => {
-      setLoading(true);
-      try {
-        const token = localStorage.getItem('auth_token');
-        
-        if (!token) {
+      // Сначала пробуем авторизоваться через Telegram
+      if (isTelegramReady && telegramUser) {
+        const success = await telegramAuth(telegramUser);
+        if (success) {
           setLoading(false);
           return;
         }
-        
-        // Устанавливаем токен в заголовок запросов
-        const response = await api.auth.getMe();
-        
-        if (response.data) {
-          setUser(response.data);
-          setIsAuthenticated(true);
-          setIsAdmin(response.data.is_admin || false);
-        }
-      } catch (err) {
-        console.error('Ошибка при проверке авторизации:', err);
-        // Если токен недействителен, удаляем его
-        localStorage.removeItem('auth_token');
-        setError('Сессия истекла. Пожалуйста, войдите снова.');
-      } finally {
-        setLoading(false);
       }
+      
+      // Если не удалось через Telegram, проверяем токен
+      const storedToken = localStorage.getItem('authToken');
+      
+      if (storedToken) {
+        try {
+          // Устанавливаем токен в заголовки запросов
+          api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+          
+          // Проверка валидности токена через /auth/me
+          const response = await authApi.getMe();
+          if (response.data && response.data.user) {
+            setCurrentUser(response.data.user);
+            setToken(storedToken);
+            setIsAuthenticated(true);
+            setIsAdmin(response.data.user.is_admin || false);
+          }
+        } catch (error) {
+          // Если токен недействителен, очищаем localStorage
+          console.error('Ошибка проверки токена:', error);
+          localStorage.removeItem('authToken');
+          delete api.defaults.headers.common['Authorization'];
+          setToken(null);
+          setCurrentUser(null);
+          setIsAuthenticated(false);
+          setIsAdmin(false);
+        }
+      }
+      
+      setLoading(false);
     };
-
+    
     checkAuth();
-  }, []);
+  }, [isTelegramReady, telegramUser]);
 
   // Метод для входа в систему
   const login = async (email, password) => {
@@ -70,7 +123,8 @@ export const AuthProvider = ({ children }) => {
         const token = responseData.token || responseData.data.token;
         const userData = responseData.user || responseData.data?.user || {};
         
-        localStorage.setItem('auth_token', token);
+        localStorage.setItem('authToken', token);
+        setToken(token);
         
         // Добавляем отладочную информацию
         console.log('User data from login:', userData);
@@ -82,7 +136,7 @@ export const AuthProvider = ({ children }) => {
             ? userData.is_admin.toLowerCase() === 'true' 
             : Boolean(userData.is_admin);
         
-        setUser(userData);
+        setCurrentUser(userData);
         setIsAuthenticated(true);
         setIsAdmin(isAdminValue);
         
@@ -144,11 +198,15 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     
     try {
-      const response = await api.auth.register(userData);
+      const response = await authApi.register(userData);
       
       if (response.data?.token) {
-        localStorage.setItem('auth_token', response.data.token);
-        setUser(response.data.user);
+        const token = response.data.token;
+        const user = response.data.user;
+        
+        localStorage.setItem('authToken', token);
+        setToken(token);
+        setCurrentUser(user);
         setIsAuthenticated(true);
         setIsAdmin(false); // Новые пользователи не являются администраторами
         return true;
@@ -171,7 +229,7 @@ export const AuthProvider = ({ children }) => {
       const response = await api.auth.updateProfile(userData);
       
       if (response.data) {
-        setUser({ ...user, ...response.data });
+        setCurrentUser({ ...currentUser, ...response.data });
         return true;
       }
     } catch (err) {
@@ -186,13 +244,14 @@ export const AuthProvider = ({ children }) => {
   // Метод для выхода из системы
   const logout = () => {
     // Удаляем все данные из localStorage
-    localStorage.removeItem('auth_token');
+    localStorage.removeItem('authToken');
     localStorage.removeItem('user_is_admin');
     
     // Сбрасываем состояние
-    setUser(null);
+    setCurrentUser(null);
     setIsAuthenticated(false);
     setIsAdmin(false);
+    setToken(null);
     
     // Для полной очистки состояния и предотвращения проблем с кешированием
     // можно перезагрузить страницу
@@ -200,7 +259,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const value = {
-    user,
+    currentUser,
+    token,
     isAuthenticated,
     isAdmin,
     loading,
@@ -209,6 +269,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateProfile,
+    telegramAuth
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

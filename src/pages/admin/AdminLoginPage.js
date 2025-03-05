@@ -72,7 +72,7 @@ const AdminLoginPage = () => {
     
     // Очищаем localStorage и перезагружаем страницу
     // для полного сброса состояния авторизации
-    localStorage.removeItem('auth_token');
+    localStorage.removeItem('authToken');
     localStorage.removeItem('user_is_admin');
     window.location.reload();
   };

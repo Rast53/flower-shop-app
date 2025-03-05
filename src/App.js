@@ -30,6 +30,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminFlowers from './pages/admin/AdminFlowers';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminCategories from './pages/admin/AdminCategories';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Стили
@@ -87,9 +88,19 @@ function App() {
                     <AdminDashboard />
                   </AdminRoute>
                 } />
+                <Route path="/admin/flowers" element={
+                  <AdminRoute>
+                    <AdminFlowers />
+                  </AdminRoute>
+                } />
                 <Route path="/admin/products" element={
                   <AdminRoute>
                     <AdminFlowers />
+                  </AdminRoute>
+                } />
+                <Route path="/admin/categories" element={
+                  <AdminRoute>
+                    <AdminCategories />
                   </AdminRoute>
                 } />
                 <Route path="/admin/orders" element={

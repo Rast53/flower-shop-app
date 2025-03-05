@@ -10,6 +10,7 @@ const Header = () => {
   const { totalItems } = useCart();
   const [categories, setCategories] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const navigate = useNavigate();
 
   // Получаем категории при загрузке компонента
@@ -36,7 +37,32 @@ const Header = () => {
   // Переключатель мобильного меню
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
+    // Закрываем активное выпадающее меню при переключении главного меню
+    setActiveDropdown(null);
   };
+
+  // Обработчик для переключения выпадающего меню
+  const toggleDropdown = (dropdownName) => {
+    if (activeDropdown === dropdownName) {
+      setActiveDropdown(null);
+    } else {
+      setActiveDropdown(dropdownName);
+    }
+  };
+
+  // Закрытие всех меню при клике вне их
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.dropdown')) {
+        setActiveDropdown(null);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="header">
@@ -58,11 +84,19 @@ const Header = () => {
             <li>
               <Link to="/" onClick={() => setMenuOpen(false)}>Главная</Link>
             </li>
-            <li className="dropdown">
-              <span className="dropdown-toggle">Каталог</span>
-              <ul className="dropdown-menu">
+            <li className={`dropdown ${activeDropdown === 'catalog' ? 'active' : ''}`}>
+              <span 
+                className="dropdown-toggle" 
+                onClick={() => toggleDropdown('catalog')}
+              >
+                Каталог
+              </span>
+              <ul className={`dropdown-menu ${activeDropdown === 'catalog' ? 'show' : ''}`}>
                 <li>
-                  <Link to="/catalog" onClick={() => setMenuOpen(false)}>
+                  <Link to="/catalog" onClick={() => {
+                    setMenuOpen(false);
+                    setActiveDropdown(null);
+                  }}>
                     Все цветы
                   </Link>
                 </li>
@@ -70,7 +104,10 @@ const Header = () => {
                   <li key={category.id}>
                     <Link 
                       to={`/catalog/${category.id}`}
-                      onClick={() => setMenuOpen(false)}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setActiveDropdown(null);
+                      }}
                     >
                       {category.name}
                     </Link>
@@ -79,27 +116,52 @@ const Header = () => {
               </ul>
             </li>
             {isAdmin && (
-              <li className="dropdown">
-                <span className="dropdown-toggle">Админ</span>
-                <ul className="dropdown-menu">
+              <li className={`dropdown ${activeDropdown === 'admin' ? 'active' : ''}`}>
+                <span 
+                  className="dropdown-toggle" 
+                  onClick={() => toggleDropdown('admin')}
+                >
+                  Админ
+                </span>
+                <ul className={`dropdown-menu ${activeDropdown === 'admin' ? 'show' : ''}`}>
                   <li>
-                    <Link to="/admin" onClick={() => setMenuOpen(false)}>
+                    <Link to="/admin" onClick={() => {
+                      setMenuOpen(false);
+                      setActiveDropdown(null);
+                    }}>
                       Панель
                     </Link>
                   </li>
                   <li>
-                    <Link to="/admin/flowers" onClick={() => setMenuOpen(false)}>
+                    <Link to="/admin/flowers" onClick={() => {
+                      setMenuOpen(false);
+                      setActiveDropdown(null);
+                    }}>
                       Цветы
                     </Link>
                   </li>
                   <li>
-                    <Link to="/admin/categories" onClick={() => setMenuOpen(false)}>
+                    <Link to="/admin/categories" onClick={() => {
+                      setMenuOpen(false);
+                      setActiveDropdown(null);
+                    }}>
                       Категории
                     </Link>
                   </li>
                   <li>
-                    <Link to="/admin/orders" onClick={() => setMenuOpen(false)}>
+                    <Link to="/admin/orders" onClick={() => {
+                      setMenuOpen(false);
+                      setActiveDropdown(null);
+                    }}>
                       Заказы
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/admin/users" onClick={() => {
+                      setMenuOpen(false);
+                      setActiveDropdown(null);
+                    }}>
+                      Пользователи
                     </Link>
                   </li>
                 </ul>
@@ -115,24 +177,37 @@ const Header = () => {
             </Link>
             
             {isAuthenticated ? (
-              <div className="dropdown">
-                <span className="dropdown-toggle user-toggle">
+              <div className={`dropdown ${activeDropdown === 'user' ? 'active' : ''}`}>
+                <span 
+                  className="dropdown-toggle user-toggle"
+                  onClick={() => toggleDropdown('user')}
+                >
                   <span className="material-icons">account_circle</span>
-                  <span className="user-name">{user?.name || 'Пользователь'}</span>
+                  <span className="user-name">{user?.username || 'Пользователь'}</span>
                 </span>
-                <ul className="dropdown-menu">
+                <ul className={`dropdown-menu ${activeDropdown === 'user' ? 'show' : ''}`}>
                   <li>
-                    <Link to="/profile" onClick={() => setMenuOpen(false)}>
+                    <Link to="/profile" onClick={() => {
+                      setMenuOpen(false);
+                      setActiveDropdown(null);
+                    }}>
                       Профиль
                     </Link>
                   </li>
                   <li>
-                    <Link to="/orders" onClick={() => setMenuOpen(false)}>
+                    <Link to="/orders" onClick={() => {
+                      setMenuOpen(false);
+                      setActiveDropdown(null);
+                    }}>
                       Мои заказы
                     </Link>
                   </li>
                   <li>
-                    <button onClick={handleLogout} className="logout-button">
+                    <button onClick={() => {
+                      handleLogout();
+                      setMenuOpen(false);
+                      setActiveDropdown(null);
+                    }} className="logout-button">
                       Выйти
                     </button>
                   </li>
