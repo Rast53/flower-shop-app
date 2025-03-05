@@ -56,9 +56,12 @@ const FlowerForm = () => {
   const loadCategories = async () => {
     try {
       const response = await api.categories.getAll();
-      if (response.data && response.data.data && response.data.data.categories) {
-        setCategories(response.data.data.categories);
-      }
+      if (response.data && response.data.data) {
+        const cats = Array.isArray(response.data.data)
+        ? response.data.data
+        : response.data.data.categories;
+        setCategories(cats || []);
+        }
     } catch (error) {
       console.error('Ошибка загрузки категорий:', error);
     }
@@ -170,6 +173,14 @@ const FlowerForm = () => {
     try {
       setSubmitting(true);
       
+      // Проверка наличия токена перед отправкой запроса
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        alert('Ошибка авторизации. Пожалуйста, войдите снова.');
+        navigate('/admin/login');
+        return;
+      }
+      
       // Подготовка данных формы
       const formData = new FormData();
       formData.append('name', flower.name);
@@ -198,6 +209,14 @@ const FlowerForm = () => {
       }
     } catch (error) {
       console.error('Ошибка при сохранении цветка:', error);
+      
+      // Обработка ошибок авторизации
+      if (error.response && error.response.status === 401) {
+        alert('Ошибка авторизации. Пожалуйста, войдите снова.');
+        localStorage.removeItem('authToken');
+        navigate('/admin/login');
+        return;
+      }
       
       // Отображение ошибок от сервера
       if (error.response && error.response.data && error.response.data.errors) {

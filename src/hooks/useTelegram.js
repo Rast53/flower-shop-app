@@ -8,23 +8,58 @@ export function useTelegram() {
   const [tg, setTg] = useState(null);
   const [user, setUser] = useState(null);
   const [isReady, setIsReady] = useState(false);
+  const [initDataChecked, setInitDataChecked] = useState(false);
 
   useEffect(() => {
-    // Проверяем, открыто ли приложение в Telegram
-    if (window.Telegram && window.Telegram.WebApp) {
-      const webApp = window.Telegram.WebApp;
-      setTg(webApp);
-      
-      // Данные пользователя Telegram
-      if (webApp.initDataUnsafe && webApp.initDataUnsafe.user) {
-        setUser(webApp.initDataUnsafe.user);
+    // Функция для проверки и инициализации Telegram WebApp
+    const initTelegramApp = () => {
+      try {
+        // Проверяем, открыто ли приложение в Telegram
+        if (window.Telegram && window.Telegram.WebApp) {
+          const webApp = window.Telegram.WebApp;
+          console.log('Telegram WebApp обнаружен. Версия:', webApp.version);
+          
+          setTg(webApp);
+          
+          // Отладочная информация о данных инициализации
+          console.log('initData доступен:', !!webApp.initData);
+          console.log('initDataUnsafe доступен:', !!webApp.initDataUnsafe);
+          
+          // Данные пользователя Telegram
+          if (webApp.initDataUnsafe && webApp.initDataUnsafe.user) {
+            console.log('Данные пользователя Telegram:', webApp.initDataUnsafe.user);
+            setUser(webApp.initDataUnsafe.user);
+          } else {
+            console.warn('Данные пользователя Telegram не найдены');
+          }
+          
+          // Сообщаем Telegram, что приложение готово
+          webApp.ready();
+          setIsReady(true);
+          setInitDataChecked(true);
+        } else {
+          console.warn('Telegram WebApp не обнаружен. Приложение запущено вне Telegram.');
+          setInitDataChecked(true);
+        }
+      } catch (error) {
+        console.error('Ошибка при инициализации Telegram WebApp:', error);
+        setInitDataChecked(true);
       }
-      
-      // Сообщаем Telegram, что приложение готово
-      webApp.ready();
-      setIsReady(true);
-    }
-  }, []);
+    };
+    
+    // Запускаем инициализацию
+    initTelegramApp();
+    
+    // Делаем повторную попытку через 1 секунду, если не получилось
+    const retryTimeout = setTimeout(() => {
+      if (!tg && !initDataChecked) {
+        console.log('Повторная попытка инициализации Telegram WebApp...');
+        initTelegramApp();
+      }
+    }, 1000);
+    
+    return () => clearTimeout(retryTimeout);
+  }, [tg, initDataChecked]);
 
   const onClose = useCallback(() => {
     tg?.close();

@@ -19,6 +19,14 @@ const LoginPage = () => {
   // Используем данные из Telegram для автоматической авторизации
   useEffect(() => {
     const authenticateWithTelegram = async () => {
+      // Добавляем больше отладочной информации
+      console.log('Состояние авторизации:', {
+        tgAvailable: !!tg,
+        userAvailable: !!telegramUser,
+        isAuthenticated,
+        isProcessing
+      });
+      
       if (tg && telegramUser && !isAuthenticated && !isProcessing) {
         try {
           setIsProcessing(true);
@@ -26,27 +34,62 @@ const LoginPage = () => {
           
           // Получаем initData от Telegram
           const initData = tg.initData || '';
+          console.log('initData из Telegram:', initData ? 'Получен' : 'Отсутствует');
+          
+          // Подробная информация о пользователе
+          console.log('Данные пользователя Telegram для авторизации:', {
+            id: telegramUser.id,
+            username: telegramUser.username,
+            first_name: telegramUser.first_name,
+            last_name: telegramUser.last_name
+          });
           
           // Готовим данные для отправки на сервер
           const telegramData = {
-            telegram_id: telegramUser.id.toString(),
-            telegram_username: telegramUser.username || '',
-            initData: initData,
-            user_data: telegramUser
+            telegram_id: String(telegramUser.id),
+            username: telegramUser.username || '',
+            first_name: telegramUser.first_name || '',
+            last_name: telegramUser.last_name || '',
+            // Добавляем дополнительные данные, если они требуются
+            initData: initData
           };
           
           console.log('Отправка данных для авторизации через Telegram:', telegramData);
           
           // Отправляем данные на сервер для аутентификации
-          const response = await api.auth.verifyTelegram(telegramData);
+          console.log('Вызываем api.auth.telegramAuth...');
+          const response = await api.auth.telegramAuth(telegramData);
           
-          if (response.data && response.data.token) {
+          console.log('Ответ от сервера при авторизации через Telegram:', response.data);
+          
+          // Учитываем различные варианты структуры ответа
+          const responseData = response.data?.data || response.data;
+          
+          if (responseData?.token || responseData?.user?.token) {
+            console.log('Токен получен успешно');
+            const token = responseData.token || responseData.user?.token;
+            const userData = responseData.user || {};
+            
+            console.log('Выполняем вход с данными:', { 
+              userDataAvailable: !!userData, 
+              tokenExists: !!token,
+              userData: {
+                id: userData.id,
+                name: userData.name,
+                is_admin: userData.is_admin
+              }
+            });
+            
             // Вызываем функцию входа из контекста авторизации
-            login(response.data.token, response.data.user);
+            login(token, userData);
             navigate('/');
+          } else {
+            console.error('Ошибка формата ответа:', responseData);
+            setError('Неверный формат ответа от сервера.');
           }
         } catch (err) {
-          console.error('Ошибка авторизации через Telegram:', err);
+          console.error('Полная ошибка авторизации через Telegram:', err);
+          console.error('Стек ошибки:', err.stack);
           setError('Не удалось авторизоваться через Telegram. Пожалуйста, попробуйте позже.');
         } finally {
           setIsProcessing(false);

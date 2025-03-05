@@ -16,10 +16,20 @@ const api = axios.create({
 // Добавляем перехватчик запросов для добавления токена авторизации
 api.interceptors.request.use(
   (config) => {
+    // Всегда получаем токен из localStorage (может быть обновлен)
     const token = localStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Добавляем отладочную информацию
+    console.log('API Request:', { 
+      url: config.url, 
+      method: config.method,
+      hasToken: !!token,
+      headers: config.headers
+    });
+    
     return config;
   },
   (error) => Promise.reject(error)
@@ -31,13 +41,24 @@ api.interceptors.response.use(
   (error) => {
     // Обработка ошибки 401 (Unauthorized)
     if (error.response && error.response.status === 401) {
+      console.warn('Ошибка авторизации 401: Перенаправляем на страницу входа');
+      
       // Удаляем токен при ошибке авторизации
       localStorage.removeItem('authToken');
+      localStorage.removeItem('user_is_admin');
+      
       // Удаляем заголовок авторизации
       delete api.defaults.headers.common['Authorization'];
       
-      // Если в приложении есть глобальное событие для выхода, можно его запустить здесь
-      // window.dispatchEvent(new Event('auth:logout'));
+      // Перенаправляем на страницу входа
+      // Проверяем URL, чтобы определить, куда перенаправлять - на админский вход или обычный
+      const isAdminUrl = window.location.pathname.startsWith('/admin');
+      const loginUrl = isAdminUrl ? '/admin/login' : '/login';
+      
+      // Используем setTimeout, чтобы перенаправление произошло после завершения текущей операции
+      setTimeout(() => {
+        window.location.href = loginUrl;
+      }, 100);
     }
     
     // Логирование ошибок

@@ -60,6 +60,15 @@ export const AuthProvider = ({ children }) => {
   // Проверка авторизации при загрузке
   useEffect(() => {
     const checkAuth = async () => {
+      // Проверяем состояние debugging
+      const debugEnabled = process.env.NODE_ENV === 'development';
+      if (debugEnabled) {
+        console.log('AUTH CONTEXT DEBUG MODE:', { 
+          token: localStorage.getItem('authToken'),
+          isAdmin: localStorage.getItem('user_is_admin')
+        });
+      }
+
       // Сначала пробуем авторизоваться через Telegram
       if (isTelegramReady && telegramUser) {
         const success = await telegramAuth(telegramUser);
@@ -79,6 +88,11 @@ export const AuthProvider = ({ children }) => {
           
           // Проверка валидности токена через /auth/me
           const response = await authApi.getMe();
+          
+          if (debugEnabled) {
+            console.log('Auth status response:', response);
+          }
+          
           // Проверяем структуру ответа
           const userData = response.data?.user || response.data;
           
@@ -87,13 +101,18 @@ export const AuthProvider = ({ children }) => {
             setToken(storedToken);
             setIsAuthenticated(true);
             setIsAdmin(userData.is_admin || false);
+            
+            // Обновляем информацию о правах в localStorage
+            localStorage.setItem('user_is_admin', String(userData.is_admin || false));
           } else {
             throw new Error('Неверный формат ответа от сервера');
           }
         } catch (error) {
-          // Если токен недействителен, очищаем localStorage
           console.error('Ошибка проверки токена:', error);
+          
+          // Если токен недействителен, очищаем localStorage
           localStorage.removeItem('authToken');
+          localStorage.removeItem('user_is_admin');
           delete api.defaults.headers.common['Authorization'];
           setToken(null);
           setCurrentUser(null);
@@ -109,11 +128,42 @@ export const AuthProvider = ({ children }) => {
   }, [isTelegramReady, telegramUser]);
 
   // Метод для входа в систему
-  const login = async (email, password) => {
+  const login = async (emailOrToken, passwordOrUser) => {
     setLoading(true);
     setError(null);
     
-    console.log('Попытка входа:', { email });
+    // Если передан токен напрямую (используется при авторизации через Telegram)
+    if (typeof emailOrToken === 'string' && typeof passwordOrUser === 'object') {
+      const token = emailOrToken;
+      const userData = passwordOrUser;
+      
+      console.log('Вход с готовым токеном:', { userData });
+      
+      localStorage.setItem('authToken', token);
+      setToken(token);
+      
+      // Явно преобразуем is_admin в булево значение, если оно строковое
+      const isAdminValue = 
+        typeof userData.is_admin === 'string' 
+          ? userData.is_admin.toLowerCase() === 'true' 
+          : Boolean(userData.is_admin);
+      
+      setCurrentUser(userData);
+      setIsAuthenticated(true);
+      setIsAdmin(isAdminValue);
+      
+      // Сохраняем информацию о правах в localStorage
+      localStorage.setItem('user_is_admin', String(isAdminValue));
+      
+      setLoading(false);
+      return true;
+    }
+    
+    // Стандартный вход с email и паролем
+    const email = emailOrToken;
+    const password = passwordOrUser;
+    
+    console.log('Попытка входа с email/паролем:', { email });
     
     try {
       console.log('Отправка запроса на аутентификацию...');
