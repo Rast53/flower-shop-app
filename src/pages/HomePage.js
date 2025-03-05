@@ -29,12 +29,22 @@ const HomePage = () => {
           api.get('/flowers').catch(err => ({ data: { data: [] } }))
         ]);
         
-        setCategories(categoriesRes.data?.data?.categories || []);
-        setPopularFlowers(flowersRes.data?.data || []);
+        // Проверяем наличие и структуру данных
+        const categoriesData = categoriesRes.data?.data?.categories;
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        
+        // Проверяем наличие и структуру данных для цветов
+        const flowersData = flowersRes.data?.data;
+        setPopularFlowers(Array.isArray(flowersData) ? flowersData : []);
+        
         setError(null);
       } catch (error) {
         console.error('Ошибка при загрузке данных:', error);
         setError('Не удалось загрузить данные. Пожалуйста, попробуйте позже.');
+        
+        // В случае ошибки, устанавливаем пустые массивы, чтобы предотвратить ошибки рендеринга
+        setCategories([]);
+        setPopularFlowers([]);
       } finally {
         setLoading(false);
       }

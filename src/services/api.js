@@ -33,7 +33,16 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // Удаляем токен при ошибке авторизации
       localStorage.removeItem('authToken');
+      // Удаляем заголовок авторизации
+      delete api.defaults.headers.common['Authorization'];
+      
+      // Если в приложении есть глобальное событие для выхода, можно его запустить здесь
+      // window.dispatchEvent(new Event('auth:logout'));
     }
+    
+    // Логирование ошибок
+    console.error('API Error:', error.response?.status, error.message);
+    
     return Promise.reject(error);
   }
 );
@@ -58,7 +67,18 @@ export const categoryApi = {
 // Методы API для цветов
 export const flowerApi = {
   getAll: (params) => api.get('/flowers', { params }),
-  getById: (id) => api.get(`/flowers/${id}`)
+  getById: (id) => api.get(`/flowers/${id}`),
+  create: (data) => api.post('/flowers', data, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  }),
+  update: (id, data) => api.put(`/flowers/${id}`, data, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  }),
+  delete: (id) => api.delete(`/flowers/${id}`)
 };
 
 // Обратная совместимость

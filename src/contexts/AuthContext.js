@@ -79,11 +79,16 @@ export const AuthProvider = ({ children }) => {
           
           // Проверка валидности токена через /auth/me
           const response = await authApi.getMe();
-          if (response.data && response.data.user) {
-            setCurrentUser(response.data.user);
+          // Проверяем структуру ответа
+          const userData = response.data?.user || response.data;
+          
+          if (userData) {
+            setCurrentUser(userData);
             setToken(storedToken);
             setIsAuthenticated(true);
-            setIsAdmin(response.data.user.is_admin || false);
+            setIsAdmin(userData.is_admin || false);
+          } else {
+            throw new Error('Неверный формат ответа от сервера');
           }
         } catch (error) {
           // Если токен недействителен, очищаем localStorage

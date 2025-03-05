@@ -32,6 +32,7 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminCategories from './pages/admin/AdminCategories';
 import NotFoundPage from './pages/NotFoundPage';
+import FlowerForm from './pages/admin/FlowerForm';
 
 // Стили
 import './App.css';
@@ -93,9 +94,14 @@ function App() {
                     <AdminFlowers />
                   </AdminRoute>
                 } />
-                <Route path="/admin/products" element={
+                <Route path="/admin/flowers/add" element={
                   <AdminRoute>
-                    <AdminFlowers />
+                    <FlowerForm />
+                  </AdminRoute>
+                } />
+                <Route path="/admin/flowers/edit/:id" element={
+                  <AdminRoute>
+                    <FlowerForm />
                   </AdminRoute>
                 } />
                 <Route path="/admin/categories" element={
