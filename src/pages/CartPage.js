@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
 import { useTelegram } from '../hooks/useTelegram';
+import { formatImageUrl, handleImageError } from '../utils/imageUtils';
 import '../styles/CartPage.css';
 
 /**
@@ -124,8 +125,9 @@ const CartPage = () => {
                 <div className="product-info">
                   <div className="product-image">
                     <img 
-                      src={item.image_url || '/images/flower-placeholder.jpg'} 
-                      alt={item.name} 
+                      src={formatImageUrl(item.image_url)} 
+                      alt={item.name}
+                      onError={handleImageError}
                     />
                   </div>
                   <div className="product-details">

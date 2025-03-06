@@ -18,8 +18,16 @@ const Header = () => {
     async function fetchCategories() {
       try {
         const response = await categoryApi.getAll();
-        console.log('Ответ API:', response.data);
-        setCategories(response.data.data.categories || []);
+        console.log('Ответ API по категориям:', response.data);
+        
+        // Устанавливаем категории из ответа
+        const categoriesData = response.data.data || [];
+        setCategories(categoriesData);
+        
+        // Выводим информацию о каждой категории для отладки
+        categoriesData.forEach(cat => {
+          console.log(`Категория: ${cat.name}, ID: ${cat.id}, Тип ID: ${typeof cat.id}`);
+        });
       } catch (error) {
         console.error('Ошибка загрузки категорий:', error);
       }
@@ -100,19 +108,38 @@ const Header = () => {
                     Все цветы
                   </Link>
                 </li>
-                {Array.isArray(categories) && categories.map((category) => (
-                  <li key={category.id}>
-                    <Link 
-                      to={`/catalog/${category.id}`}
-                      onClick={() => {
-                        setMenuOpen(false);
-                        setActiveDropdown(null);
-                      }}
-                    >
-                      {category.name}
-                    </Link>
+                {Array.isArray(categories) && categories.length > 0 ? (
+                  categories.map((category) => {
+                    // Проверяем наличие ID категории и конвертируем в строку для URL
+                    if (!category || category.id === undefined) {
+                      console.warn('Категория без ID:', category);
+                      return null;
+                    }
+                    
+                    // Преобразуем ID категории в строку для URL
+                    const categoryId = String(category.id);
+                    
+                    console.log(`Создаем ссылку на категорию: ${category.name}, ID: ${categoryId}`);
+                    
+                    return (
+                      <li key={categoryId}>
+                        <Link 
+                          to={`/catalog/${categoryId}`}
+                          onClick={() => {
+                            setMenuOpen(false);
+                            setActiveDropdown(null);
+                          }}
+                        >
+                          {category.name}
+                        </Link>
+                      </li>
+                    );
+                  })
+                ) : (
+                  <li>
+                    <span className="no-categories">Загрузка категорий...</span>
                   </li>
-                ))}
+                )}
               </ul>
             </li>
             {isAdmin && (

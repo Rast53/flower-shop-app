@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/CheckoutPage.css';
+import { formatImageUrl, handleImageError } from '../utils/imageUtils';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -423,7 +424,11 @@ const CheckoutPage = () => {
                   {cartItems.map((item) => (
                     <div key={item.id} className="order-item">
                       <div className="order-item-image">
-                        <img src={item.image} alt={item.name} />
+                        <img 
+                          src={formatImageUrl(item.image)} 
+                          alt={item.name} 
+                          onError={handleImageError}
+                        />
                       </div>
                       <div className="order-item-details">
                         <h4>{item.name}</h4>

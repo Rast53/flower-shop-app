@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
 import { flowerApi } from '../services/api';
+import { CartContext } from '../contexts/CartContext';
+import PageLoader from '../components/PageLoader';
+import { formatImageUrl, handleImageError } from '../utils/imageUtils';
 import '../styles/ProductPage.css';
 
 /**
@@ -140,8 +143,9 @@ const ProductPage = () => {
         <div className="product-gallery">
           <div className="main-image">
             <img 
-              src={product.image_url || '/images/flower-placeholder.jpg'} 
+              src={formatImageUrl(product.image_url)} 
               alt={product.name}
+              onError={handleImageError}
             />
           </div>
         </div>
@@ -242,7 +246,7 @@ const ProductPage = () => {
               <div key={related.id} className="related-product-card">
                 <Link to={`/product/${related.id}`} className="related-product-image">
                   <img 
-                    src={related.image_url || '/images/flower-placeholder.jpg'} 
+                    src={formatImageUrl(related.image_url)} 
                     alt={related.name} 
                   />
                 </Link>

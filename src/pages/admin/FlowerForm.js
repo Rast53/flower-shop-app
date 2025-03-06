@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTelegram } from '../../hooks/useTelegram';
 import api from '../../services/api';
 import '../../styles/FlowerForm.css';
+import { formatImageUrl, handleImageError } from '../../utils/imageUtils';
 
 /**
  * Компонент формы для добавления/редактирования цветка
@@ -340,13 +341,12 @@ const FlowerForm = () => {
           <label>Изображение {!isEditing && '*'}</label>
           <div className="image-upload-container">
             <div className="image-preview">
-              {imagePreview ? (
-                <img src={imagePreview} alt="Предпросмотр" />
-              ) : (
-                <div className="no-image">
-                  <span className="material-icons">image</span>
-                  <p>Нет изображения</p>
-                </div>
+              {imagePreview && (
+                <img 
+                  src={imagePreview} 
+                  alt="Предпросмотр" 
+                  onError={handleImageError}
+                />
               )}
             </div>
             <div className="upload-controls">

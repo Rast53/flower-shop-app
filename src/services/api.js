@@ -27,7 +27,9 @@ api.interceptors.request.use(
       url: config.url, 
       method: config.method,
       hasToken: !!token,
-      headers: config.headers
+      headers: config.headers,
+      params: config.params, // Логируем параметры запроса
+      data: config.data // Логируем данные для POST запросов
     });
     
     return config;
@@ -87,7 +89,52 @@ export const categoryApi = {
 
 // Методы API для цветов
 export const flowerApi = {
-  getAll: (params) => api.get('/flowers', { params }),
+  getAll: async (params) => {
+    console.log('Запрос цветов с параметрами:', params);
+    try {
+      const response = await api.get('/flowers', { params });
+      
+      // Добавляем дополнительное логирование ответа
+      console.log(`Получен ответ от /flowers, статус: ${response.status}`);
+      console.log('Заголовки ответа:', response.headers);
+      
+      // Проверяем, есть ли данные в ответе
+      if (response.data) {
+        // Подробная информация о структуре данных
+        console.log('Структура данных в ответе:', typeof response.data);
+        if (typeof response.data === 'object') {
+          console.log('Ключи в объекте ответа:', Object.keys(response.data));
+          
+          // Проверяем наличие данных
+          if (response.data.data) {
+            console.log('Тип data:', typeof response.data.data);
+            console.log('Является ли data массивом:', Array.isArray(response.data.data));
+            console.log('Количество элементов:', Array.isArray(response.data.data) ? response.data.data.length : 'не массив');
+            
+            // Если массив пустой, но count больше 0, это может быть ошибка
+            if (Array.isArray(response.data.data) && response.data.data.length === 0 && response.data.count > 0) {
+              console.warn('Сервер вернул count > 0, но пустой массив данных! Возможная ошибка в API');
+            }
+          }
+        }
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Ошибка при получении цветов:', error);
+      // Подробная информация об ошибке
+      if (error.response) {
+        console.error('Статус ошибки:', error.response.status);
+        console.error('Данные ошибки:', error.response.data);
+        console.error('Заголовки ошибки:', error.response.headers);
+      } else if (error.request) {
+        console.error('Ошибка запроса (нет ответа от сервера):', error.request);
+      } else {
+        console.error('Ошибка настройки запроса:', error.message);
+      }
+      throw error;
+    }
+  },
   getById: (id) => api.get(`/flowers/${id}`),
   create: (data) => api.post('/flowers', data, {
     headers: {

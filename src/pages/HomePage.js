@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import api, { categoryApi, flowerApi } from '../services/api';
 import '../styles/HomePage.css';
+import PageLoader from '../components/PageLoader';
+import { formatImageUrl, handleImageError } from '../utils/imageUtils';
 
 /**
  * Компонент HomePage - главная страница цветочного магазина
@@ -111,20 +113,16 @@ const HomePage = () => {
       </section>
 
       {/* Популярные товары */}
-      <section className="popular-products">
-        <div className="section-header">
-          <h2>Популярные букеты</h2>
-          <Link to="/catalog" className="view-all-link">
-            Смотреть все
-          </Link>
-        </div>
-        <div className="products-grid">
-          {popularFlowers.map((flower) => (
+      <section className="popular-flowers-section">
+        <h2 className="section-title">Популярные цветы</h2>
+        <div className="flowers-grid">
+          {popularFlowers.map(flower => (
             <div key={flower.id} className="flower-card">
               <Link to={`/product/${flower.id}`} className="flower-image">
                 <img
-                  src={flower.image_url || '/images/flower-placeholder.jpg'}
+                  src={formatImageUrl(flower.image_url)}
                   alt={flower.name}
+                  onError={handleImageError}
                 />
               </Link>
               <div className="flower-details">

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTelegram } from '../../hooks/useTelegram';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { formatImageUrl, handleImageError } from '../../utils/imageUtils';
 import '../../styles/AdminFlowers.css';
 
 /**
@@ -200,13 +201,12 @@ const AdminFlowers = () => {
               filteredFlowers.map(flower => (
                 <tr key={flower.id}>
                   <td>{flower.id}</td>
-                  <td>
-                    <div className="flower-thumbnail">
-                      <img 
-                        src={flower.image_url || '/images/flower-placeholder.jpg'} 
-                        alt={flower.name} 
-                      />
-                    </div>
+                  <td className="flower-image-cell">
+                    <img 
+                      src={formatImageUrl(flower.image_url)} 
+                      alt={flower.name}
+                      onError={handleImageError}
+                    />
                   </td>
                   <td>{flower.name}</td>
                   <td>{flower.category?.name || 'Без категории'}</td>
