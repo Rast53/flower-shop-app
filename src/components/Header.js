@@ -77,7 +77,7 @@ const Header = () => {
       <div className="header-container">
         <div className="header-logo">
           <Link to="/">
-            <h1>Цветочный Магазин</h1>
+            <h1>Цветы в Кембридже</h1>
           </Link>
         </div>
 

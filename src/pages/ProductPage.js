@@ -5,6 +5,7 @@ import { flowerApi } from '../services/api';
 import { CartContext } from '../contexts/CartContext';
 import PageLoader from '../components/PageLoader';
 import { formatImageUrl, handleImageError } from '../utils/imageUtils';
+import { productLogger as logger } from '../utils/logger';
 import '../styles/ProductPage.css';
 
 /**
@@ -27,27 +28,101 @@ const ProductPage = () => {
     const fetchProductData = async () => {
       try {
         setLoading(true);
+        logger.log(`Начало загрузки товара с ID: ${id}`);
         
         // Получаем информацию о товаре
         const response = await flowerApi.getById(id);
-        setProduct(response.data);
+        logger.log('Получен ответ от API', response.data);
         
-        // Получаем связанные товары из той же категории
-        if (response.data.category_id) {
-          const relatedResponse = await flowerApi.getAll({
-            category_id: response.data.category_id,
-            exclude_id: id,
-            limit: 4
+        // Правильно извлекаем данные о товаре из ответа
+        if (response.data && response.data.data && response.data.data.flower) {
+          const flowerData = response.data.data.flower;
+          logger.log('Данные цветка', {
+            id: flowerData.id,
+            name: flowerData.name,
+            is_available: flowerData.is_available,
+            stock_quantity: flowerData.stock_quantity,
+            in_stock: flowerData.in_stock
           });
-          setRelatedProducts(relatedResponse.data);
+          
+          // Проверяем наличие товара и добавляем свойство isAvailable
+          // чтобы не зависеть от структуры данных сервера
+          const isProductAvailable = 
+            // Если есть поле in_stock, используем его
+            (typeof flowerData.in_stock === 'boolean' && flowerData.in_stock) ||
+            // Или проверяем is_available и stock_quantity
+            (flowerData.is_available && 
+             typeof flowerData.stock_quantity === 'number' && 
+             flowerData.stock_quantity > 0) ||
+            // Или просто проверяем наличие товара, если остальных полей нет
+            (flowerData.is_available && !flowerData.hasOwnProperty('stock_quantity'));
+          
+          // Добавляем проверенное свойство к объекту товара
+          const productWithAvailability = {
+            ...flowerData,
+            isAvailable: isProductAvailable
+          };
+          
+          logger.log('Доступность товара', {
+            isAvailable: isProductAvailable,
+            factors: {
+              in_stock: typeof flowerData.in_stock === 'boolean' && flowerData.in_stock,
+              is_available_with_quantity: flowerData.is_available && 
+                typeof flowerData.stock_quantity === 'number' && 
+                flowerData.stock_quantity > 0,
+              is_available_only: flowerData.is_available && !flowerData.hasOwnProperty('stock_quantity')
+            }
+          });
+          
+          setProduct(productWithAvailability);
+          
+          // Получаем связанные товары из той же категории, если есть категория
+          if (flowerData.category_id) {
+            try {
+              logger.log(`Запрос связанных товаров для категории ${flowerData.category_id}`);
+              const relatedResponse = await flowerApi.getAll({
+                category_id: flowerData.category_id,
+                exclude_id: id,
+                limit: 4
+              });
+              
+              if (relatedResponse.data && relatedResponse.data.data && 
+                  relatedResponse.data.data.flowers) {
+                logger.log('Получены связанные товары', { 
+                  count: relatedResponse.data.data.flowers.length 
+                });
+                
+                // Добавляем проверку доступности для связанных товаров
+                const relatedProductsWithAvailability = relatedResponse.data.data.flowers.map(flower => {
+                  const isAvailable = 
+                    (typeof flower.in_stock === 'boolean' && flower.in_stock) ||
+                    (flower.is_available && 
+                     typeof flower.stock_quantity === 'number' && 
+                     flower.stock_quantity > 0) ||
+                    (flower.is_available && !flower.hasOwnProperty('stock_quantity'));
+                  
+                  return {
+                    ...flower,
+                    isAvailable
+                  };
+                });
+                
+                setRelatedProducts(relatedProductsWithAvailability);
+              }
+            } catch (relatedErr) {
+              logger.error('Ошибка при загрузке связанных товаров', relatedErr);
+            }
+          }
+        } else {
+          logger.error('Неверный формат данных товара', response.data);
+          setError('Неверный формат данных товара. Пожалуйста, попробуйте позже.');
         }
-        
-        setError(null);
       } catch (err) {
-        console.error('Ошибка при загрузке товара:', err);
+        logger.error('Ошибка при загрузке товара', err);
         setError('Не удалось загрузить информацию о товаре. Пожалуйста, попробуйте позже.');
       } finally {
         setLoading(false);
+        logger.log('Загрузка товара завершена');
       }
     };
     
@@ -58,6 +133,7 @@ const ProductPage = () => {
   const handleQuantityChange = (e) => {
     const value = parseInt(e.target.value);
     if (value > 0 && value <= 99) {
+      logger.log(`Изменено количество товара на ${value}`);
       setQuantity(value);
     }
   };
@@ -65,20 +141,30 @@ const ProductPage = () => {
   // Увеличение количества товара
   const incrementQuantity = () => {
     if (quantity < 99) {
-      setQuantity(prev => prev + 1);
+      const newQuantity = quantity + 1;
+      logger.log(`Увеличено количество товара с ${quantity} до ${newQuantity}`);
+      setQuantity(newQuantity);
     }
   };
   
   // Уменьшение количества товара
   const decrementQuantity = () => {
     if (quantity > 1) {
-      setQuantity(prev => prev - 1);
+      const newQuantity = quantity - 1;
+      logger.log(`Уменьшено количество товара с ${quantity} до ${newQuantity}`);
+      setQuantity(newQuantity);
     }
   };
   
   // Добавление товара в корзину
   const handleAddToCart = () => {
     if (product) {
+      logger.log(`Добавление в корзину: ${product.name}, количество: ${quantity}`, {
+        productId: product.id,
+        quantity,
+        price: product.price
+      });
+      
       addToCart(product, quantity);
       
       // Показываем уведомление
@@ -154,7 +240,7 @@ const ProductPage = () => {
           <h1 className="product-title">{product.name}</h1>
           
           <div className="product-meta">
-            {product.in_stock ? (
+            {product.isAvailable ? (
               <span className="in-stock">В наличии</span>
             ) : (
               <span className="out-of-stock">Нет в наличии</span>
@@ -219,9 +305,9 @@ const ProductPage = () => {
             <button 
               className="btn btn-primary add-to-cart"
               onClick={handleAddToCart}
-              disabled={!product.in_stock}
+              disabled={!product.isAvailable}
             >
-              {product.in_stock ? 'Добавить в корзину' : 'Товар закончился'}
+              {product.isAvailable ? 'Добавить в корзину' : 'Товар закончился'}
             </button>
           </div>
           
@@ -263,8 +349,9 @@ const ProductPage = () => {
                       addToCart(related, 1);
                       alert(`"${related.name}" добавлен в корзину`);
                     }}
+                    disabled={!related.isAvailable}
                   >
-                    В корзину
+                    {related.isAvailable ? 'В корзину' : 'Нет в наличии'}
                   </button>
                 </div>
               </div>

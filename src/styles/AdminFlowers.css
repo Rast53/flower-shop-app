@@ -151,6 +151,20 @@
   object-fit: cover;
 }
 
+/* Изображения в таблице администрирования цветов */
+.flower-image-cell {
+  width: 80px;
+  max-width: 80px;
+  height: 80px;
+}
+
+.flower-thumbnail-img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
 /* Статус наличия товара */
 .status-badge {
   display: inline-block;

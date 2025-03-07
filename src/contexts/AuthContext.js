@@ -85,8 +85,10 @@ export const AuthProvider = ({ children }) => {
         try {
           // Устанавливаем токен в заголовки запросов
           api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+          console.log('Установлен токен из localStorage:', storedToken.substring(0, 10) + '...');
           
           // Проверка валидности токена через /auth/me
+          console.log('Проверка токена через /auth/me...');
           const response = await authApi.getMe();
           
           if (debugEnabled) {
@@ -94,17 +96,27 @@ export const AuthProvider = ({ children }) => {
           }
           
           // Проверяем структуру ответа
-          const userData = response.data?.user || response.data;
+          const userData = response.data?.user || response.data?.data?.user || response.data;
           
           if (userData) {
+            console.log('Токен действителен, пользователь:', userData);
             setCurrentUser(userData);
             setToken(storedToken);
             setIsAuthenticated(true);
-            setIsAdmin(userData.is_admin || false);
+            
+            // Явно преобразуем is_admin в булево значение
+            const isAdminValue = 
+              typeof userData.is_admin === 'string' 
+                ? userData.is_admin.toLowerCase() === 'true' 
+                : Boolean(userData.is_admin);
+            
+            setIsAdmin(isAdminValue);
             
             // Обновляем информацию о правах в localStorage
-            localStorage.setItem('user_is_admin', String(userData.is_admin || false));
+            localStorage.setItem('user_is_admin', String(isAdminValue));
+            console.log('Установлен флаг администратора:', isAdminValue);
           } else {
+            console.warn('Неверный формат ответа от сервера, userData отсутствует');
             throw new Error('Неверный формат ответа от сервера');
           }
         } catch (error) {
@@ -119,6 +131,8 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(false);
           setIsAdmin(false);
         }
+      } else {
+        console.warn('Токен не найден в localStorage');
       }
       
       setLoading(false);

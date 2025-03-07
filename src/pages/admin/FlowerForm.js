@@ -56,15 +56,32 @@ const FlowerForm = () => {
   // Загрузка категорий
   const loadCategories = async () => {
     try {
+      console.log('FlowerForm: Загрузка категорий...');
       const response = await api.categories.getAll();
-      if (response.data && response.data.data) {
-        const cats = Array.isArray(response.data.data)
-        ? response.data.data
-        : response.data.data.categories;
-        setCategories(cats || []);
-        }
+      console.log('FlowerForm: Ответ с категориями:', response);
+      
+      // Определяем правильную структуру ответа
+      let categoriesData = null;
+      
+      if (response.data && Array.isArray(response.data.data)) {
+        console.log('FlowerForm: Формат категорий - массив в data');
+        categoriesData = response.data.data;
+      } else if (response.data && response.data.data && response.data.data.categories) {
+        console.log('FlowerForm: Формат категорий - вложенные объекты');
+        categoriesData = response.data.data.categories;
+      } else if (response.data && Array.isArray(response.data)) {
+        console.log('FlowerForm: Формат категорий - прямой массив');
+        categoriesData = response.data;
+      }
+      
+      if (categoriesData && Array.isArray(categoriesData)) {
+        console.log('FlowerForm: Получены категории:', categoriesData.length);
+        setCategories(categoriesData);
+      } else {
+        console.warn('FlowerForm: Неверный формат данных категорий:', response.data);
+      }
     } catch (error) {
-      console.error('Ошибка загрузки категорий:', error);
+      console.error('FlowerForm: Ошибка загрузки категорий:', error);
     }
   };
 
@@ -72,29 +89,65 @@ const FlowerForm = () => {
   const loadFlower = async () => {
     try {
       setLoading(true);
-      const response = await api.flowers.getById(id);
       
+      // Проверяем авторизацию
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.error('FlowerForm: Отсутствует токен авторизации');
+        alert('Ошибка авторизации. Пожалуйста, войдите снова.');
+        navigate('/admin/login');
+        return;
+      }
+      
+      console.log('FlowerForm: Загрузка цветка по ID:', id);
+      const response = await api.flowers.getById(id);
+      console.log('FlowerForm: Ответ API:', response);
+      
+      // Проверяем, что ответ содержит данные цветка в ожидаемом формате
       if (response.data && response.data.data && response.data.data.flower) {
         const flowerData = response.data.data.flower;
+        console.log('FlowerForm: Данные цветка получены:', flowerData);
+        
+        // Устанавливаем данные формы, обеспечивая правильное преобразование типов
         setFlower({
           name: flowerData.name || '',
           description: flowerData.description || '',
-          price: flowerData.price || '',
-          stock_quantity: flowerData.stock_quantity || '',
+          price: String(flowerData.price || '0'),
+          stock_quantity: String(flowerData.stock_quantity || '0'),
           image_url: flowerData.image_url || '',
-          category_id: flowerData.category_id || '',
+          category_id: String(flowerData.category_id || ''),
           is_available: flowerData.is_available !== undefined ? flowerData.is_available : true
         });
         
+        // Если у цветка есть URL изображения, отображаем его
         if (flowerData.image_url) {
+          console.log('FlowerForm: URL изображения:', flowerData.image_url);
           setImagePreview(flowerData.image_url);
         }
+      } else {
+        console.error('FlowerForm: Неверный формат данных цветка:', response.data);
+        throw new Error('Неверный формат данных цветка');
       }
-      setLoading(false);
     } catch (error) {
-      console.error('Ошибка загрузки данных цветка:', error);
-      setLoading(false);
+      console.error('FlowerForm: Ошибка загрузки данных цветка:', error);
+      
+      // Показываем сообщение об ошибке пользователю
+      let errorMessage = 'Не удалось загрузить данные цветка. Пожалуйста, попробуйте еще раз.';
+      
+      if (error.response) {
+        if (error.response.status === 404) {
+          errorMessage = 'Цветок не найден. Возможно, он был удален.';
+        } else if (error.response.status === 401 || error.response.status === 403) {
+          errorMessage = 'Ошибка авторизации. Пожалуйста, войдите снова.';
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('user_is_admin');
+        }
+      }
+      
+      alert(errorMessage);
       navigate('/admin/flowers');
+    } finally {
+      setLoading(false);
     }
   };
 

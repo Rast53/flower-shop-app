@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../../services/api';
 import '../../styles/AdminUsers.css';
 
 // Проверка, находимся ли мы в среде Telegram
@@ -12,6 +13,7 @@ const AdminUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserDetails, setShowUserDetails] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     // Скрываем основную кнопку Telegram при монтировании
@@ -19,110 +21,110 @@ const AdminUsers = () => {
       window.Telegram.WebApp.MainButton.hide();
     }
 
-    // Симуляция загрузки данных пользователей
-    const loadUsers = setTimeout(() => {
-      const mockUsers = [
-        { 
-          id: 1, 
-          username: 'Elena_M', 
-          name: 'Елена Михайлова', 
-          phone: '+7 (910) 555-1234', 
-          email: 'elena@example.com', 
-          registrationDate: '2023-04-15', 
-          lastActive: '2023-06-25',
-          role: 'user',
-          ordersCount: 8,
-          totalSpent: 12350,
-          status: 'active'
-        },
-        { 
-          id: 2, 
-          username: 'Alex_P', 
-          name: 'Александр Петров', 
-          phone: '+7 (925) 444-5678', 
-          email: 'alex@example.com', 
-          registrationDate: '2023-03-10', 
-          lastActive: '2023-06-24',
-          role: 'user',
-          ordersCount: 5,
-          totalSpent: 8720,
-          status: 'active'
-        },
-        { 
-          id: 3, 
-          username: 'admin', 
-          name: 'Администратор', 
-          phone: '+7 (999) 999-9999', 
-          email: 'admin@flowerapp.ru', 
-          registrationDate: '2023-01-01', 
-          lastActive: '2023-06-26',
-          role: 'admin',
-          ordersCount: 0,
-          totalSpent: 0,
-          status: 'active'
-        },
-        { 
-          id: 4, 
-          username: 'Maria_K', 
-          name: 'Мария Кузнецова', 
-          phone: '+7 (916) 333-8765', 
-          email: 'maria@example.com', 
-          registrationDate: '2023-05-02', 
-          lastActive: '2023-06-10',
-          role: 'user',
-          ordersCount: 2,
-          totalSpent: 3450,
-          status: 'inactive'
-        },
-        { 
-          id: 5, 
-          username: 'Ivan_S', 
-          name: 'Иван Смирнов', 
-          phone: '+7 (903) 222-1122', 
-          email: 'ivan@example.com', 
-          registrationDate: '2023-02-18', 
-          lastActive: '2023-06-22',
-          role: 'user',
-          ordersCount: 12,
-          totalSpent: 24680,
-          status: 'active'
-        },
-        { 
-          id: 6, 
-          username: 'Anna_V', 
-          name: 'Анна Волкова', 
-          phone: '+7 (905) 777-3344', 
-          email: 'anna@example.com', 
-          registrationDate: '2023-04-05', 
-          lastActive: '2023-06-15',
-          role: 'user',
-          ordersCount: 4,
-          totalSpent: 6890,
-          status: 'active'
-        },
-        { 
-          id: 7, 
-          username: 'Dmitry_K', 
-          name: 'Дмитрий Козлов', 
-          phone: '+7 (926) 888-9900', 
-          email: 'dmitry@example.com', 
-          registrationDate: '2023-03-22', 
-          lastActive: '2023-05-30',
-          role: 'user',
-          ordersCount: 1,
-          totalSpent: 1500,
-          status: 'blocked'
-        }
-      ];
-      
-      setUsers(mockUsers);
-      setLoading(false);
-    }, 1500);
-
-    return () => {
-      clearTimeout(loadUsers);
-    };
+    loadUsers();
   }, []);
+
+  // Загрузка пользователей из API
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Проверяем токен авторизации
+      const token = localStorage.getItem('authToken');
+      const isAdminFlag = localStorage.getItem('user_is_admin');
+      
+      console.log('AdminUsers: Текущий статус авторизации:', { 
+        token: token ? 'Присутствует' : 'Отсутствует',
+        isAdmin: isAdminFlag
+      });
+      
+      if (!token) {
+        console.error('AdminUsers: Токен авторизации отсутствует. Перенаправляем на страницу входа.');
+        navigate('/admin/login');
+        return;
+      }
+      
+      console.log('AdminUsers: Запрос на получение пользователей...');
+      const response = await api.users.getAll();
+      console.log('AdminUsers: Ответ API:', response);
+      
+      // Определяем правильную структуру ответа
+      let usersData = null;
+      
+      if (response.data && response.data.data && response.data.data.users) {
+        console.log('AdminUsers: Формат пользователей - вложенные объекты');
+        usersData = response.data.data.users;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        console.log('AdminUsers: Формат пользователей - массив в data');
+        usersData = response.data.data;
+      } else if (response.data && Array.isArray(response.data)) {
+        console.log('AdminUsers: Формат пользователей - прямой массив');
+        usersData = response.data;
+      } else if (response.data && response.data.users && Array.isArray(response.data.users)) {
+        console.log('AdminUsers: Формат пользователей - объект с users');
+        usersData = response.data.users;
+      }
+      
+      if (usersData && Array.isArray(usersData)) {
+        console.log('AdminUsers: Получены пользователи:', usersData.length);
+        
+        // Обогащение данных пользователей дополнительной информацией
+        const enrichedUsers = await Promise.all(
+          usersData.map(async (user) => {
+            try {
+              // Запрашиваем информацию о заказах пользователя для подсчета статистики
+              const ordersResponse = await api.users.getUserOrders(user.id, { count_only: true });
+              
+              // Попытка извлечь количество заказов и общую сумму
+              let ordersCount = 0;
+              let totalSpent = 0;
+              
+              if (ordersResponse.data && ordersResponse.data.data) {
+                if (ordersResponse.data.data.pagination) {
+                  ordersCount = ordersResponse.data.data.pagination.totalItems || 0;
+                }
+                if (ordersResponse.data.data.totalSpent) {
+                  totalSpent = ordersResponse.data.data.totalSpent;
+                }
+              }
+              
+              // Формируем обогащенные данные пользователя
+              return {
+                ...user,
+                ordersCount: user.ordersCount || ordersCount,
+                totalSpent: user.totalSpent || totalSpent
+              };
+            } catch (error) {
+              console.error(`AdminUsers: Ошибка при получении данных заказов для пользователя ${user.id}:`, error);
+              return {
+                ...user,
+                ordersCount: user.ordersCount || 0,
+                totalSpent: user.totalSpent || 0
+              };
+            }
+          })
+        );
+        
+        setUsers(enrichedUsers);
+      } else {
+        console.warn('AdminUsers: Неверный формат данных пользователей:', response.data);
+        setError('Не удалось загрузить пользователей. Неверный формат данных.');
+      }
+    } catch (error) {
+      console.error('AdminUsers: Ошибка загрузки пользователей:', error);
+      setError('Не удалось загрузить пользователей. Проверьте подключение к интернету.');
+      
+      // Проверяем, связана ли ошибка с авторизацией
+      if (error.response && error.response.status === 401) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user_is_admin');
+        navigate('/admin/login');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Функция для форматирования даты
   const formatDate = (dateString) => {
@@ -159,15 +161,32 @@ const AdminUsers = () => {
   };
 
   // Функция для изменения статуса пользователя
-  const changeUserStatus = (userId, newStatus) => {
-    setUsers(prevUsers =>
-      prevUsers.map(user =>
-        user.id === userId ? { ...user, status: newStatus } : user
-      )
-    );
-    
-    if (selectedUser && selectedUser.id === userId) {
-      setSelectedUser({ ...selectedUser, status: newStatus });
+  const changeUserStatus = async (userId, newStatus) => {
+    try {
+      setLoading(true);
+      console.log(`AdminUsers: Изменение статуса пользователя ${userId} на ${newStatus}`);
+      
+      const response = await api.users.updateStatus(userId, newStatus);
+      console.log('AdminUsers: Ответ API:', response);
+      
+      // Обновляем локальные данные пользователя
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.id === userId ? { ...user, status: newStatus } : user
+        )
+      );
+      
+      if (selectedUser && selectedUser.id === userId) {
+        setSelectedUser({ ...selectedUser, status: newStatus });
+      }
+      
+      // Показываем уведомление об успешном обновлении
+      alert(`Статус пользователя успешно изменен на "${getUserStatusText(newStatus)}"`);
+    } catch (error) {
+      console.error('AdminUsers: Ошибка при изменении статуса пользователя:', error);
+      alert('Не удалось изменить статус пользователя. Пожалуйста, попробуйте еще раз.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -217,6 +236,19 @@ const AdminUsers = () => {
           </div>
         </div>
       </div>
+
+      {error && (
+        <div className="admin-error-message">
+          <span className="material-icons">error</span>
+          <p>{error}</p>
+          <button 
+            className="btn btn-secondary" 
+            onClick={loadUsers}
+          >
+            Повторить загрузку
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="admin-loading-container">

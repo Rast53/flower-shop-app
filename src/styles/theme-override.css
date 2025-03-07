@@ -1,0 +1,245 @@
+/* Файл для принудительного использования светлой темы */
+
+/* Принудительно устанавливаем светлую тему для всего приложения */
+html {
+  color-scheme: light !important;
+}
+
+/* Общие стили для принудительной светлой темы */
+html, body, .app, main, div, section, header, footer, nav, 
+.admin-flowers, .admin-categories, .admin-users, .admin-orders, .admin-dashboard {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+}
+
+/* Принудительное переопределение всех темных стилей */
+.App-dark, .dark-mode, .theme-dark,
+[data-theme="dark"],
+[class*="dark-theme"],
+[class*="dark_theme"],
+[class*="darkTheme"] {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+}
+
+/* Заголовки */
+h1, h2, h3, h4, h5, h6 {
+  color: #333333 !important;
+}
+
+/* Параграфы и текст */
+p, span, a, label, li {
+  color: #333333 !important;
+}
+
+/* Формы и элементы управления */
+input, select, textarea, button {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+  border-color: #dddddd !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #e84393 !important;
+  box-shadow: 0 0 0 2px rgba(232, 67, 147, 0.2) !important;
+}
+
+/* Таблицы */
+table {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+  border-color: #eeeeee !important;
+}
+
+/* Таблицы - заголовки */
+th {
+  background-color: #f8f9fa !important;
+  color: #333333 !important;
+  border-color: #eeeeee !important;
+}
+
+/* Таблицы - ячейки */
+td {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+  border-color: #eeeeee !important;
+}
+
+/* Эффект наведения для строк таблицы */
+tr:hover {
+  background-color: #f8f9fa !important;
+}
+
+/* Карточки и контейнеры */
+.card, .container {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+  border-color: #eeeeee !important;
+}
+
+/* Поля ввода и выпадающие списки в админке */
+.search-box input, .filter-options select {
+  background-color: #ffffff !important;
+  border-color: #dddddd !important;
+  color: #333333 !important;
+}
+
+/* При фокусе на полях ввода */
+.search-box input:focus, .filter-options select:focus {
+  border-color: #e84393 !important;
+}
+
+/* Заголовки админ-панелей */
+.admin-header {
+  border-bottom-color: #eeeeee !important;
+}
+
+.admin-header h1 {
+  color: #333333 !important;
+}
+
+/* Таблицы в админке */
+.flowers-table, .categories-table, .users-table, .orders-table {
+  background-color: #ffffff !important;
+}
+
+/* Строки таблиц в админке */
+.flowers-table th, .categories-table th, .users-table th, .orders-table th {
+  background-color: #f8f9fa !important;
+  border-bottom-color: #eeeeee !important;
+  color: #333333 !important;
+}
+
+/* Ячейки таблиц в админке */
+.flowers-table td, .categories-table td, .users-table td, .orders-table td {
+  border-bottom-color: #eeeeee !important;
+  color: #333333 !important;
+}
+
+/* Эффект наведения на строки таблиц */
+.flowers-table tbody tr:hover, .categories-table tbody tr:hover, 
+.users-table tbody tr:hover, .orders-table tbody tr:hover {
+  background-color: #f8f9fa !important;
+}
+
+/* Статусы "в наличии" */
+.in-stock, .status-active {
+  background-color: #e3f9e9 !important;
+  color: #27ae60 !important;
+}
+
+/* Статусы "нет в наличии" */
+.out-of-stock, .status-inactive, .status-blocked {
+  background-color: #ffeaee !important;
+  color: #e74c3c !important;
+}
+
+/* Пагинация */
+.pagination-btn, .pagination-number {
+  background-color: #ffffff !important;
+  border-color: #dddddd !important;
+  color: #333333 !important;
+}
+
+/* Эффект наведения на кнопки пагинации */
+.pagination-btn:hover:not(:disabled), .pagination-number:hover:not(.active) {
+  background-color: #f8f9fa !important;
+}
+
+/* Активная страница пагинации */
+.pagination-number.active {
+  background-color: #e84393 !important;
+  color: white !important;
+}
+
+/* Кнопка первичного действия */
+.btn-primary {
+  background-color: #e84393 !important;
+  color: white !important;
+}
+
+/* Кнопка при наведении */
+.btn-primary:hover {
+  background-color: #d13680 !important;
+  color: white !important;
+}
+
+/* Вторичная кнопка */
+.btn-secondary {
+  background-color: #f8f9fa !important;
+  color: #333333 !important;
+  border-color: #dddddd !important;
+}
+
+/* Вторичная кнопка при наведении */
+.btn-secondary:hover {
+  background-color: #e9ecef !important;
+}
+
+/* Сообщения об ошибках и предупреждения */
+.admin-error-message, .error-message, .warning-message {
+  background-color: #fff3f3 !important;
+  color: #e74c3c !important;
+  border-color: #ffcaca !important;
+}
+
+/* Модальные окна */
+.modal, .modal-content, .dialog {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+  border-color: #eeeeee !important;
+}
+
+/* Индикаторы загрузки */
+.admin-loading-container, .loading-container {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  color: #333333 !important;
+}
+
+.admin-loader, .loader {
+  border-color: #e84393 transparent transparent transparent !important;
+}
+
+/* Фиксируем все иконки Material Icons */
+.material-icons {
+  color: inherit !important;
+}
+
+/* Дополнительно для действий в таблице */
+.action-btn {
+  background-color: transparent !important;
+}
+
+.edit-btn:hover {
+  background-color: rgba(33, 150, 243, 0.1) !important;
+  color: #2196f3 !important;
+}
+
+.delete-btn:hover {
+  background-color: rgba(244, 67, 54, 0.1) !important;
+  color: #f44336 !important;
+}
+
+/* Форма редактирования */
+.flower-form-container, .category-form {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+}
+
+/* Превью изображения */
+.image-preview {
+  background-color: #f8f9fa !important;
+  border-color: #dddddd !important;
+}
+
+/* Переключатели */
+.toggle-switch input:checked + .slider {
+  background-color: #e84393 !important;
+}
+
+/* Выбор файла */
+.file-input-label {
+  background-color: #f8f9fa !important;
+  color: #333333 !important;
+  border-color: #dddddd !important;
+} 

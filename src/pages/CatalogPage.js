@@ -46,248 +46,101 @@ const CatalogPage = () => {
     }
   }, [category]);
   
-  // Загружаем данные при изменении URL или параметров сортировки
+  // Подготавливаем функцию с учетом зависимостей
+  const fetchFlowersByCategory = React.useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      let response;
+      
+      // Для "Все категории" не передаем параметр category_id вообще или передаем равным 'all'
+      if (activeCategory === 'all') {
+        console.log('Запрашиваем все цветы без фильтрации по категории');
+        response = await flowerApi.getAll();
+      } else {
+        console.log('Запрашиваем цветы по категории:', activeCategory);
+        response = await flowerApi.getAll({ category_id: activeCategory });
+      }
+      
+      let rawFlowers = [];
+      if (response.data && response.data.data && response.data.data.flowers) {
+        // Данные в формате { data: { flowers: [...] } }
+        rawFlowers = response.data.data.flowers;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        // Данные в формате { data: [...] }
+        rawFlowers = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        // Данные в формате [...] 
+        rawFlowers = response.data;
+      } else if (response.data && response.data.flowers && Array.isArray(response.data.flowers)) {
+        // Данные в формате { flowers: [...] }
+        rawFlowers = response.data.flowers;
+      } else {
+        console.error('Неожиданный формат данных:', response.data);
+        setError('Ошибка загрузки данных: неверный формат ответа');
+        return;
+      }
+      
+      // Применяем фильтрацию по цене
+      let filtered = rawFlowers.filter(flower => {
+        const price = parseFloat(flower.price) || 0;
+        return price >= priceRange.min && price <= priceRange.max;
+      });
+      
+      // Применяем сортировку
+      let sorted = [...filtered];
+      switch (sortBy) {
+        case 'price_asc':
+          sorted.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
+          break;
+        case 'price_desc':
+          sorted.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+          break;
+        case 'name_asc':
+          sorted.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 'name_desc':
+          sorted.sort((a, b) => b.name.localeCompare(a.name));
+          break;
+        default: // popularity
+          sorted.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+      }
+      
+      setFlowers(sorted);
+    } catch (err) {
+      console.error('Ошибка при запросе цветов:', err);
+      setError('Не удалось загрузить данные. Пожалуйста, попробуйте позже.');
+    } finally {
+      setLoading(false);
+    }
+  }, [activeCategory, sortBy, priceRange]);
+  
+  // Используем эту функцию в useEffect
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      
-      // Инициализация массива цветов
-      let processedFlowers = [];
-      
+    // Загружаем категории один раз при монтировании
+    const fetchCategories = async () => {
       try {
-        // Если выбрана категория, загружаем цветы по категории
-        console.log('Запрос на получение цветов, категория:', activeCategory);
-        
-        let flowersResponse;
-        try {
-          if (activeCategory && activeCategory !== 'all') {
-            // Используем функцию форматирования ID категории
-            const categoryId = formatCategoryId(activeCategory);
-            console.log('Отправляем запрос с категорией:', categoryId, 'тип:', typeof categoryId);
-            
-            // Важно: отправляем ID как строку, так как в логах сервера видно, что он ожидает строковый ID
-            flowersResponse = await flowerApi.getAll({ 
-              category_id: String(categoryId)
-            });
-          } else {
-            flowersResponse = await flowerApi.getAll();
-          }
-          
-          console.log('Получен ответ API по цветам, статус:', flowersResponse.status);
-          
-          // Обработка ответа и извлечение данных
-          if (flowersResponse.data) {
-            // Изучаем структуру ответа API
-            console.log('Структура ответа API (ключи):', Object.keys(flowersResponse.data));
-            
-            // Получаем данные из ответа в зависимости от его структуры
-            let flowersData = [];
-            
-            // Сервер возвращает данные в формате { data: [...], error: null }
-            if (flowersResponse.data.data) {
-              flowersData = flowersResponse.data.data;
-            } else if (Array.isArray(flowersResponse.data)) {
-              flowersData = flowersResponse.data;
-            } else if (flowersResponse.data.flowers) {
-              flowersData = flowersResponse.data.flowers;
-            } else if (flowersResponse.data.items) {
-              flowersData = flowersResponse.data.items;
-            }
-            
-            console.log('Получено цветов из запроса по категории:', flowersData.length);
-            
-            // Если нашли какие-то цветы, используем их
-            if (flowersData.length > 0) {
-              // Проверяем структуру данных цветка на соответствие серверной модели
-              const sampleFlower = flowersData[0];
-              console.log('Пример структуры цветка:', sampleFlower);
-              
-              // Преобразуем данные, если необходимо, чтобы они соответствовали модели Flower
-              processedFlowers = flowersData.map(flower => ({
-                id: flower.id,
-                name: flower.name,
-                description: flower.description,
-                price: flower.price !== undefined ? flower.price : 0,
-                stock_quantity: flower.stock_quantity,
-                image_url: formatImageUrl(flower.image_url || '/images/flower-placeholder.jpg'),
-                popularity: flower.popularity,
-                category_id: flower.category_id,
-                is_available: flower.is_available !== undefined ? flower.is_available : true,
-                category: flower.category || null
-              }));
-            }
-          }
-        } catch (flowerError) {
-          console.error('Ошибка при загрузке цветов по категории:', flowerError);
-        }
-        
-        // Если не удалось получить цветы по категории, пробуем получить все цветы
-        // и отфильтровать их на клиенте
-        if (processedFlowers.length === 0 && activeCategory && activeCategory !== 'all') {
-          console.log('Пробуем альтернативный подход: получение всех цветов и фильтрация по категории');
-          
-          try {
-            const allFlowersResponse = await flowerApi.getAll();
-            
-            if (allFlowersResponse.data) {
-              let allFlowers = [];
-              
-              if (allFlowersResponse.data.data) {
-                allFlowers = allFlowersResponse.data.data;
-              } else if (Array.isArray(allFlowersResponse.data)) {
-                allFlowers = allFlowersResponse.data;
-              } else if (allFlowersResponse.data.flowers) {
-                allFlowers = allFlowersResponse.data.flowers;
-              } else if (allFlowersResponse.data.items) {
-                allFlowers = allFlowersResponse.data.items;
-              } else if (allFlowersResponse.flowers && Array.isArray(allFlowersResponse.flowers)) {
-                // Обработка случая, когда flowers находится в корне объекта ответа
-                allFlowers = allFlowersResponse.flowers;
-                console.log('Извлекаем цветы из корня объекта ответа:', allFlowers.length);
-              }
-              
-              console.log(`Получено всего цветов: ${allFlowers.length}, фильтруем по категории ID=${activeCategory}`);
-              
-              // Проверяем, что allFlowers - это массив перед фильтрацией
-              if (Array.isArray(allFlowers)) {
-                // Фильтруем цветы по выбранной категории на клиенте
-                const filteredFlowers = allFlowers.filter(flower => 
-                  flower && (
-                    (flower.category_id !== undefined && String(flower.category_id) === String(activeCategory)) ||
-                    (flower.category && flower.category.id !== undefined && String(flower.category.id) === String(activeCategory))
-                  )
-                );
-                
-                console.log(`После фильтрации осталось ${filteredFlowers.length} цветов`);
-                
-                if (filteredFlowers.length > 0) {
-                  processedFlowers = filteredFlowers;
-                }
-              } else if (allFlowers && allFlowers.flowers && Array.isArray(allFlowers.flowers)) {
-                // Обработка случая, когда allFlowers - это объект с полем flowers (массив)
-                console.log(`allFlowers не является массивом, но содержит массив flowers длиной ${allFlowers.flowers.length}`);
-                
-                const innerFlowers = allFlowers.flowers;
-                const filteredFlowers = innerFlowers.filter(flower => 
-                  flower && (
-                    (flower.category_id !== undefined && String(flower.category_id) === String(activeCategory)) ||
-                    (flower.category && flower.category.id !== undefined && String(flower.category.id) === String(activeCategory))
-                  )
-                );
-                
-                console.log(`После фильтрации осталось ${filteredFlowers.length} цветов`);
-                
-                if (filteredFlowers.length > 0) {
-                  processedFlowers = filteredFlowers;
-                }
-              } else {
-                console.error('allFlowers не является массивом:', allFlowers);
-              }
-            }
-          } catch (allFlowersError) {
-            console.error('Ошибка при загрузке всех цветов:', allFlowersError);
-          }
-        }
-        
-        // Получаем категории
-        let categoriesResponse;
-        try {
-          categoriesResponse = await categoryApi.getAll();
-          console.log('Ответ API по категориям:', categoriesResponse.data);
-          
-          // Сервер возвращает категории в формате { data: [...], error: null }
-          const categoriesData = categoriesResponse.data.data || [];
-          console.log('Получено категорий:', categoriesData.length);
-          
-          if (categoriesData.length > 0) {
-            // Проверяем структуру данных категории
-            const sampleCategory = categoriesData[0];
-            console.log('Пример структуры категории:', sampleCategory);
-            
-            // Проверяем, содержит ли категория связанные цветы
-            if (sampleCategory.flowers && Array.isArray(sampleCategory.flowers)) {
-              console.log(`Категория ${sampleCategory.name} содержит ${sampleCategory.flowers.length} связанных цветов`);
-            }
-          }
-          
-          // Устанавливаем категории в состояние
-          setCategories(categoriesData);
-          
-          // Если цветы всё ещё не получены, пробуем извлечь их из ответа категорий
-          if (processedFlowers.length === 0 && activeCategory && activeCategory !== 'all') {
-            console.log('Пробуем получить цветы из данных категорий');
-            
-            const currentCategory = categoriesData.find(cat => String(cat.id) === String(activeCategory));
-            
-            if (currentCategory && currentCategory.flowers && Array.isArray(currentCategory.flowers)) {
-              console.log(`Найдена категория ${currentCategory.name} с ${currentCategory.flowers.length} цветами`);
-              
-              // Преобразуем цветы из категории в полноценные объекты в соответствии с моделью Flower
-              const flowersFromCategory = currentCategory.flowers.map(flower => {
-                // Проверяем, в каком формате пришли данные
-                const isNestedFormat = flower['flowers.id'] !== undefined;
-                
-                return {
-                  id: isNestedFormat ? flower['flowers.id'] : flower.id,
-                  name: isNestedFormat ? flower['flowers.name'] : flower.name,
-                  price: isNestedFormat ? flower['flowers.price'] : (flower.price || 0),
-                  image_url: formatImageUrl(isNestedFormat ? flower['flowers.image_url'] : (flower.image_url || '/images/flower-placeholder.jpg')),
-                  popularity: isNestedFormat ? flower['flowers.popularity'] : (flower.popularity || 0),
-                  category_id: currentCategory.id,
-                  category: {
-                    id: currentCategory.id,
-                    name: currentCategory.name,
-                    slug: currentCategory.slug
-                  }
-                };
-              });
-              
-              if (flowersFromCategory.length > 0) {
-                console.log('Получены цветы из категории:', flowersFromCategory);
-                processedFlowers = flowersFromCategory;
-              }
-            }
-          }
-        } catch (categoryError) {
-          console.error('Ошибка при загрузке категорий:', categoryError);
-        }
-        
-        // Заключительная обработка и установка полученных цветов
-        console.log('Всего получено цветов после всех попыток:', processedFlowers.length);
-        
-        // Проверяем, что processedFlowers - это массив
-        if (!Array.isArray(processedFlowers)) {
-          console.error('processedFlowers не является массивом:', processedFlowers);
-          processedFlowers = [];
-        }
-        
-        // Проверяем наличие минимального набора полей
-        const validFlowers = processedFlowers.filter(flower => 
-          flower && flower.id && flower.name
-        ).map(flower => ({
-          ...flower,
-          price: flower.price !== undefined ? flower.price : 0,
-          image_url: flower.image_url || '/images/flower-placeholder.jpg'
-        }));
-        
-        console.log('Валидных элементов:', validFlowers.length);
-        setFlowers(validFlowers);
-        
-      } catch (error) {
-        console.error("Ошибка при загрузке данных:", error);
-        if (error.response && error.response.data && error.response.data.error) {
-          setError(`Ошибка сервера: ${error.response.data.error}`);
+        const response = await categoryApi.getAll();
+        if (response.data && response.data.data) {
+          setCategories(response.data.data);
+        } else if (Array.isArray(response.data)) {
+          setCategories(response.data);
         } else {
-          setError("Ошибка при загрузке данных. Пожалуйста, попробуйте позже.");
+          console.error('Неожиданный формат данных категорий:', response.data);
         }
-      } finally {
-        setLoading(false);
+      } catch (err) {
+        console.error('Ошибка при загрузке категорий:', err);
       }
     };
     
-    fetchData();
-  }, [activeCategory, sortBy, priceRange, location.search]);
+    fetchCategories();
+  }, []);
+  
+  // Запускаем загрузку цветов при изменении параметров
+  useEffect(() => {
+    fetchFlowersByCategory();
+  }, [fetchFlowersByCategory]);
   
   // Обработчик изменения категории
   const handleCategoryChange = (categoryId) => {

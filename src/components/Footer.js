@@ -9,7 +9,7 @@ const Footer = () => {
     <footer className="footer">
       <div className="footer-container">
         <div className="footer-section">
-          <h3>Цветочный Магазин</h3>
+          <h3>Цветы в Кембридже</h3>
           <p>Мы предлагаем широкий ассортимент свежих цветов и букетов для любого случая и праздника.</p>
         </div>
         
@@ -49,7 +49,7 @@ const Footer = () => {
       </div>
       
       <div className="footer-bottom">
-        <p>&copy; {currentYear} Цветочный Магазин. Все права защищены.</p>
+        <p>&copy; {currentYear} Цветы в Кембридже. Все права защищены.</p>
         <div className="footer-bottom-links">
           <Link to="/privacy">Политика конфиденциальности</Link>
           <Link to="/terms">Условия использования</Link>

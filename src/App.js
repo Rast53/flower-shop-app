@@ -18,6 +18,7 @@ import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
+import CustomOrderPage from './pages/CustomOrderPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
@@ -52,6 +53,7 @@ function App() {
                 <Route path="/catalog/:category" element={<CatalogPage />} />
                 <Route path="/product/:id" element={<ProductPage />} />
                 <Route path="/cart" element={<CartPage />} />
+                <Route path="/custom-order" element={<CustomOrderPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -67,11 +69,7 @@ function App() {
                     <CheckoutPage />
                   </PrivateRoute>
                 } />
-                <Route path="/order-success" element={
-                  <PrivateRoute>
-                    <OrderSuccessPage />
-                  </PrivateRoute>
-                } />
+                <Route path="/order-success" element={<OrderSuccessPage />} />
                 <Route path="/profile" element={
                   <PrivateRoute>
                     <ProfilePage />

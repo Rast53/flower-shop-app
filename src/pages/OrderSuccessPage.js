@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTelegram } from '../hooks/useTelegram';
+import { useAuth } from '../hooks/useAuth';
 import '../styles/OrderSuccessPage.css';
 
 /**
@@ -8,6 +9,11 @@ import '../styles/OrderSuccessPage.css';
  */
 const OrderSuccessPage = () => {
   const { tg } = useTelegram();
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  
+  // Получаем данные о заказе из состояния навигации
+  const { orderId, orderData } = location.state || {};
   
   // При монтировании компонента обновляем UI Telegram Mini App
   useEffect(() => {
@@ -21,11 +27,23 @@ const OrderSuccessPage = () => {
         type: 'order_completed',
         payload: {
           success: true,
+          order_id: orderId,
           timestamp: new Date().toISOString()
         }
       }));
     }
-  }, [tg]);
+  }, [tg, orderId]);
+  
+  // Форматирование даты
+  const formatDate = () => {
+    return new Date().toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
   
   return (
     <div className="order-success-page">
@@ -51,19 +69,49 @@ const OrderSuccessPage = () => {
         <h1>Заказ успешно оформлен!</h1>
         
         <p className="success-message">
-          Спасибо за ваш заказ! Информация о заказе отправлена в Telegram.
+          Спасибо за ваш заказ! {isAuthenticated ? 
+            'Вы можете отслеживать статус заказа в личном кабинете.' : 
+            'Мы отправили информацию о заказе на указанный email.'}
+        </p>
+        <p className="contact-info">
           В ближайшее время с вами свяжется наш менеджер для подтверждения деталей.
         </p>
         
         <div className="order-details">
-          <p>Номер заказа: <strong>#{Math.floor(Math.random() * 10000).toString().padStart(4, '0')}</strong></p>
-          <p>Дата: <strong>{new Date().toLocaleDateString('ru-RU')}</strong></p>
+          <p>Номер заказа: <strong>#{orderId || Math.floor(Math.random() * 10000).toString().padStart(4, '0')}</strong></p>
+          <p>Дата и время: <strong>{formatDate()}</strong></p>
+          
+          {orderData && (
+            <>
+              <p>Способ доставки: <strong>{orderData.shipping_address === 'Самовывоз' ? 'Самовывоз' : 'Доставка'}</strong></p>
+              <p>Способ оплаты: <strong>{orderData.payment_method === 'card' ? 'Оплата картой' : 'Оплата при получении'}</strong></p>
+              {orderData.contact_name && (
+                <p>Получатель: <strong>{orderData.contact_name}</strong></p>
+              )}
+            </>
+          )}
         </div>
         
         <div className="success-actions">
-          <Link to="/" className="btn btn-primary">
-            Вернуться на главную
-          </Link>
+          {isAuthenticated ? (
+            <div className="buttons-row">
+              <Link to="/profile" className="btn btn-secondary">
+                Перейти в личный кабинет
+              </Link>
+              <Link to="/" className="btn btn-primary">
+                Вернуться на главную
+              </Link>
+            </div>
+          ) : (
+            <div className="buttons-row">
+              <Link to="/login" className="btn btn-secondary">
+                Войти в аккаунт
+              </Link>
+              <Link to="/" className="btn btn-primary">
+                Вернуться на главную
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

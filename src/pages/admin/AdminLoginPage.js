@@ -95,6 +95,10 @@ const AdminLoginPage = () => {
     try {
       console.log('Отправка запроса на вход администратора...');
       
+      // Очищаем сначала localStorage для сброса старых данных авторизации
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user_is_admin');
+      
       // Проверка наличия метода login
       if (!login || typeof login !== 'function') {
         console.error('Ошибка: login не является функцией', login);
@@ -107,8 +111,30 @@ const AdminLoginPage = () => {
       console.log('Login success:', success);
       
       if (success) {
-        console.log('Успешная авторизация, перенаправление на панель администратора');
-        navigate('/admin/dashboard');
+        // Дополнительная проверка прав администратора
+        const isAdminFlag = localStorage.getItem('user_is_admin');
+        console.log('Проверка прав администратора:', { isAdminFlag });
+        
+        if (isAdminFlag === 'true') {
+          console.log('Успешная авторизация, перенаправление на панель администратора');
+          
+          // Устанавливаем токен в заголовках API перед перенаправлением
+          const token = localStorage.getItem('authToken');
+          if (token) {
+            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          }
+          
+          // Используем setTimeout для гарантии сохранения данных в localStorage
+          setTimeout(() => {
+            navigate('/admin/flowers');
+          }, 100);
+        } else {
+          console.error('Пользователь успешно авторизован, но не имеет прав администратора');
+          setFormError('У вас нет прав администратора. Обратитесь к системному администратору.');
+          
+          // Очищаем данные авторизации
+          logout();
+        }
       } else {
         console.log('Ошибка авторизации');
         setFormError(authError || 'Ошибка авторизации. Проверьте данные или обратитесь к администратору.');

@@ -1,0 +1,44 @@
+[
+  {
+    "column_name": "id",
+    "data_type": "integer",
+    "column_default": "nextval('order_items_id_seq'::regclass)",
+    "is_nullable": "NO"
+  },
+  {
+    "column_name": "order_id",
+    "data_type": "integer",
+    "column_default": null,
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "product_id",
+    "data_type": "integer",
+    "column_default": null,
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "quantity",
+    "data_type": "integer",
+    "column_default": null,
+    "is_nullable": "NO"
+  },
+  {
+    "column_name": "unit_price",
+    "data_type": "numeric",
+    "column_default": null,
+    "is_nullable": "NO"
+  },
+  {
+    "column_name": "total_price",
+    "data_type": "numeric",
+    "column_default": null,
+    "is_nullable": "NO"
+  },
+  {
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone",
+    "column_default": "CURRENT_TIMESTAMP",
+    "is_nullable": "YES"
+  }
+]

@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
+import { orderApi } from '../services/api';
 import '../styles/CheckoutPage.css';
 import { formatImageUrl, handleImageError } from '../utils/imageUtils';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { cartItems, clearCart, getTotalPrice } = useCart();
-  const { user, isAuthenticated } = useAuth();
+  const { currentUser, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -32,19 +33,20 @@ const CheckoutPage = () => {
     }
 
     // Если пользователь авторизован, заполняем форму его данными
-    if (isAuthenticated && user) {
+    if (isAuthenticated && currentUser) {
+      console.log('Заполнение формы данными пользователя:', currentUser);
       setFormData(prevState => ({
         ...prevState,
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        phone: user.phone || '',
-        email: user.email || '',
-        address: user.address || '',
-        city: user.city || '',
-        postalCode: user.postalCode || ''
+        firstName: currentUser.first_name || '',
+        lastName: currentUser.last_name || '',
+        phone: currentUser.phone || '',
+        email: currentUser.email || '',
+        address: currentUser.address || '',
+        city: currentUser.city || '',
+        postalCode: currentUser.postal_code || ''
       }));
     }
-  }, [cartItems, navigate, isAuthenticated, user]);
+  }, [cartItems, navigate, isAuthenticated, currentUser]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -69,11 +71,6 @@ const CheckoutPage = () => {
       newErrors.firstName = 'Введите имя';
     }
     
-    // Проверка фамилии
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Введите фамилию';
-    }
-    
     // Проверка телефона
     if (!formData.phone.trim()) {
       newErrors.phone = 'Введите номер телефона';
@@ -88,7 +85,7 @@ const CheckoutPage = () => {
       newErrors.email = 'Введите корректный email';
     }
     
-    // Если выбрана доставка, проверяем адрес, город и индекс
+    // Если выбрана доставка, проверяем адрес и город
     if (formData.deliveryMethod === 'delivery') {
       if (!formData.address.trim()) {
         newErrors.address = 'Введите адрес доставки';
@@ -96,10 +93,6 @@ const CheckoutPage = () => {
       
       if (!formData.city.trim()) {
         newErrors.city = 'Введите город';
-      }
-      
-      if (!formData.postalCode.trim()) {
-        newErrors.postalCode = 'Введите почтовый индекс';
       }
     }
     
@@ -120,6 +113,38 @@ const CheckoutPage = () => {
     setStep(1);
   };
 
+  const sendNotifications = async (order) => {
+    // Здесь можно добавить логику отправки уведомлений администратору
+    // Это можно реализовать через webhook Telegram, email или другие каналы
+
+    // Для примера, просто логируем информацию о заказе
+    console.log('Отправка уведомления администратору о новом заказе:', order);
+    
+    // В реальном проекте здесь может быть:
+    // - Отправка запроса на Telegram Bot API
+    // - Отправка email через API почтового сервиса
+    // - Отправка SMS и т.д.
+    
+    // Имитация отправки уведомления
+    try {
+      // Можно реализовать webhook на сервере для отправки уведомлений
+      // await fetch('https://your-notification-service.com/webhook', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     type: 'new_order',
+      //     order_id: order.id,
+      //     customer_name: `${formData.firstName} ${formData.lastName}`,
+      //     customer_phone: formData.phone,
+      //     total_amount: getTotalPrice() + deliveryPrice
+      //   })
+      // });
+      console.log('Уведомление успешно отправлено');
+    } catch (error) {
+      console.error('Ошибка при отправке уведомления:', error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validate();
@@ -133,39 +158,43 @@ const CheckoutPage = () => {
     setLoading(true);
     
     try {
-      // Создаем объект с данными заказа
+      // Формируем данные заказа в соответствии с API сервера
       const orderData = {
+        // Информация о пользователе
+        user_id: currentUser?.id, // Если пользователь авторизован
+        contact_name: `${formData.firstName} ${formData.lastName}`.trim(),
+        contact_phone: formData.phone,
+        
+        // Адрес доставки
+        shipping_address: formData.deliveryMethod === 'delivery' 
+          ? `${formData.city}, ${formData.postalCode}, ${formData.address}` 
+          : 'Самовывоз',
+        
+        // Товары в заказе
         items: cartItems.map(item => ({
-          flowerId: item.id,
-          quantity: item.quantity,
-          price: item.price
+          flower_id: item.id,
+          quantity: item.quantity
         })),
-        totalAmount: getTotalPrice(),
-        customer: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          phone: formData.phone,
-          email: formData.email
-        },
-        delivery: {
-          method: formData.deliveryMethod,
-          address: formData.address,
-          city: formData.city,
-          postalCode: formData.postalCode
-        },
-        payment: {
-          method: formData.paymentMethod
-        },
+        
+        // Дополнительная информация
         notes: formData.notes,
-        status: 'новый'
+        payment_method: formData.paymentMethod
       };
       
-      // Отправляем заказ на сервер
-      // API-запрос создания заказа будет реализован позже
-      // const response = await api.post('/orders', orderData);
+      console.log('Отправка данных заказа на сервер:', orderData);
       
-      // Имитация задержки API-запроса
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Отправляем заказ на сервер
+      const response = await orderApi.create(orderData);
+      console.log('Ответ сервера:', response.data);
+      
+      // Получаем ID созданного заказа
+      const createdOrderId = response.data?.data?.id || response.data?.id || 'ORDER-' + Math.floor(Math.random() * 10000);
+      
+      // Отправляем уведомления о новом заказе
+      await sendNotifications({
+        id: createdOrderId,
+        ...orderData
+      });
       
       // Очищаем корзину
       clearCart();
@@ -173,14 +202,14 @@ const CheckoutPage = () => {
       // Перенаправляем на страницу успешного оформления заказа
       navigate('/order-success', { 
         state: { 
-          orderId: 'ORDER-' + Math.floor(Math.random() * 10000), 
+          orderId: createdOrderId, 
           orderData 
         } 
       });
       
     } catch (error) {
       console.error('Ошибка при оформлении заказа:', error);
-      // Обработка ошибок
+      alert('Произошла ошибка при оформлении заказа. Пожалуйста, попробуйте еще раз.');
     } finally {
       setLoading(false);
     }
@@ -224,11 +253,12 @@ const CheckoutPage = () => {
                           value={formData.firstName}
                           onChange={handleChange}
                           className={errors.firstName ? 'error' : ''}
+                          placeholder="Введите ваше имя"
                         />
                         {errors.firstName && <span className="error-message">{errors.firstName}</span>}
                       </div>
                       <div className="form-field">
-                        <label htmlFor="lastName">Фамилия*</label>
+                        <label htmlFor="lastName">Фамилия</label>
                         <input
                           type="text"
                           id="lastName"
@@ -236,6 +266,7 @@ const CheckoutPage = () => {
                           value={formData.lastName}
                           onChange={handleChange}
                           className={errors.lastName ? 'error' : ''}
+                          placeholder="Введите вашу фамилию"
                         />
                         {errors.lastName && <span className="error-message">{errors.lastName}</span>}
                       </div>
@@ -252,8 +283,8 @@ const CheckoutPage = () => {
                           name="phone"
                           value={formData.phone}
                           onChange={handleChange}
-                          placeholder="+7XXXXXXXXXX"
                           className={errors.phone ? 'error' : ''}
+                          placeholder="+7 (___) ___-__-__"
                         />
                         {errors.phone && <span className="error-message">{errors.phone}</span>}
                       </div>
@@ -266,6 +297,7 @@ const CheckoutPage = () => {
                           value={formData.email}
                           onChange={handleChange}
                           className={errors.email ? 'error' : ''}
+                          placeholder="example@email.com"
                         />
                         {errors.email && <span className="error-message">{errors.email}</span>}
                       </div>
@@ -274,60 +306,55 @@ const CheckoutPage = () => {
                 </div>
 
                 <div className="form-section">
-                  <h2>Способ получения</h2>
-                  <div className="form-group delivery-options">
-                    <div className="radio-option">
-                      <input
-                        type="radio"
-                        id="delivery"
-                        name="deliveryMethod"
-                        value="delivery"
-                        checked={formData.deliveryMethod === 'delivery'}
-                        onChange={handleChange}
-                      />
-                      <label htmlFor="delivery">
-                        <span className="radio-title">Доставка</span>
-                        <span className="radio-description">Доставка курьером по адресу</span>
-                      </label>
-                      <span className="price">300 ₽</span>
-                    </div>
-                    <div className="radio-option">
-                      <input
-                        type="radio"
-                        id="pickup"
-                        name="deliveryMethod"
-                        value="pickup"
-                        checked={formData.deliveryMethod === 'pickup'}
-                        onChange={handleChange}
-                      />
-                      <label htmlFor="pickup">
-                        <span className="radio-title">Самовывоз</span>
-                        <span className="radio-description">Из нашего магазина по адресу ул. Цветочная, 1</span>
-                      </label>
-                      <span className="price">Бесплатно</span>
+                  <h2>Способ доставки</h2>
+                  <div className="form-group">
+                    <div className="radio-group">
+                      <div className="radio-option">
+                        <input
+                          type="radio"
+                          id="delivery"
+                          name="deliveryMethod"
+                          value="delivery"
+                          checked={formData.deliveryMethod === 'delivery'}
+                          onChange={handleChange}
+                        />
+                        <label htmlFor="delivery">
+                          <span className="radio-title">Доставка курьером</span>
+                          <span className="radio-price">300 ₽</span>
+                        </label>
+                      </div>
+                      <div className="radio-option">
+                        <input
+                          type="radio"
+                          id="pickup"
+                          name="deliveryMethod"
+                          value="pickup"
+                          checked={formData.deliveryMethod === 'pickup'}
+                          onChange={handleChange}
+                        />
+                        <label htmlFor="pickup">
+                          <span className="radio-title">Самовывоз из магазина</span>
+                          <span className="radio-price">Бесплатно</span>
+                        </label>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {formData.deliveryMethod === 'delivery' && (
-                  <div className="form-section">
-                    <h2>Адрес доставки</h2>
+                  {formData.deliveryMethod === 'delivery' && (
                     <div className="form-group">
                       <div className="form-field">
-                        <label htmlFor="address">Адрес*</label>
+                        <label htmlFor="address">Адрес доставки*</label>
                         <input
                           type="text"
                           id="address"
                           name="address"
                           value={formData.address}
                           onChange={handleChange}
-                          placeholder="Улица, дом, квартира"
                           className={errors.address ? 'error' : ''}
+                          placeholder="Улица, дом, квартира"
                         />
                         {errors.address && <span className="error-message">{errors.address}</span>}
                       </div>
-                    </div>
-                    <div className="form-group">
                       <div className="form-row">
                         <div className="form-field">
                           <label htmlFor="city">Город*</label>
@@ -338,11 +365,12 @@ const CheckoutPage = () => {
                             value={formData.city}
                             onChange={handleChange}
                             className={errors.city ? 'error' : ''}
+                            placeholder="Город"
                           />
                           {errors.city && <span className="error-message">{errors.city}</span>}
                         </div>
                         <div className="form-field">
-                          <label htmlFor="postalCode">Почтовый индекс*</label>
+                          <label htmlFor="postalCode">Почтовый индекс</label>
                           <input
                             type="text"
                             id="postalCode"
@@ -350,44 +378,45 @@ const CheckoutPage = () => {
                             value={formData.postalCode}
                             onChange={handleChange}
                             className={errors.postalCode ? 'error' : ''}
+                            placeholder="Индекс"
                           />
                           {errors.postalCode && <span className="error-message">{errors.postalCode}</span>}
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 <div className="form-section">
                   <h2>Способ оплаты</h2>
-                  <div className="form-group payment-options">
-                    <div className="radio-option">
-                      <input
-                        type="radio"
-                        id="card"
-                        name="paymentMethod"
-                        value="card"
-                        checked={formData.paymentMethod === 'card'}
-                        onChange={handleChange}
-                      />
-                      <label htmlFor="card">
-                        <span className="radio-title">Банковская карта</span>
-                        <span className="radio-description">Оплата онлайн банковской картой</span>
-                      </label>
-                    </div>
-                    <div className="radio-option">
-                      <input
-                        type="radio"
-                        id="cash"
-                        name="paymentMethod"
-                        value="cash"
-                        checked={formData.paymentMethod === 'cash'}
-                        onChange={handleChange}
-                      />
-                      <label htmlFor="cash">
-                        <span className="radio-title">Наличные</span>
-                        <span className="radio-description">Оплата наличными при получении</span>
-                      </label>
+                  <div className="form-group">
+                    <div className="radio-group">
+                      <div className="radio-option">
+                        <input
+                          type="radio"
+                          id="card"
+                          name="paymentMethod"
+                          value="card"
+                          checked={formData.paymentMethod === 'card'}
+                          onChange={handleChange}
+                        />
+                        <label htmlFor="card">
+                          <span className="radio-title">Оплата картой онлайн</span>
+                        </label>
+                      </div>
+                      <div className="radio-option">
+                        <input
+                          type="radio"
+                          id="cash"
+                          name="paymentMethod"
+                          value="cash"
+                          checked={formData.paymentMethod === 'cash'}
+                          onChange={handleChange}
+                        />
+                        <label htmlFor="cash">
+                          <span className="radio-title">Оплата при получении</span>
+                        </label>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -401,101 +430,110 @@ const CheckoutPage = () => {
                         name="notes"
                         value={formData.notes}
                         onChange={handleChange}
-                        placeholder="Напишите, если у вас есть особые пожелания к заказу или доставке"
                         rows="3"
+                        placeholder="Дополнительная информация к заказу..."
                       ></textarea>
                     </div>
                   </div>
                 </div>
 
-                <div className="form-buttons">
-                  <Link to="/cart" className="btn secondary">Вернуться в корзину</Link>
-                  <button type="button" className="btn primary" onClick={nextStep}>Продолжить</button>
+                <div className="form-actions">
+                  <Link to="/cart" className="btn btn-secondary">Вернуться в корзину</Link>
+                  <button type="button" className="btn btn-primary" onClick={nextStep}>Продолжить</button>
                 </div>
               </div>
             )}
 
             {step === 2 && (
               <div className="order-summary">
-                <h2>Информация о заказе</h2>
-                
-                <div className="order-items">
-                  <h3>Товары в заказе</h3>
-                  {cartItems.map((item) => (
-                    <div key={item.id} className="order-item">
-                      <div className="order-item-image">
-                        <img 
-                          src={formatImageUrl(item.image)} 
-                          alt={item.name} 
-                          onError={handleImageError}
-                        />
+                <div className="form-section">
+                  <h2>Информация о заказе</h2>
+                  <div className="customer-info">
+                    <div className="info-row">
+                      <span className="info-label">Имя:</span>
+                      <span className="info-value">{formData.firstName} {formData.lastName}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Телефон:</span>
+                      <span className="info-value">{formData.phone}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Email:</span>
+                      <span className="info-value">{formData.email}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Способ доставки:</span>
+                      <span className="info-value">
+                        {formData.deliveryMethod === 'delivery' ? 'Доставка курьером' : 'Самовывоз'}
+                      </span>
+                    </div>
+                    {formData.deliveryMethod === 'delivery' && (
+                      <div className="info-row">
+                        <span className="info-label">Адрес:</span>
+                        <span className="info-value">
+                          {formData.city}, {formData.address} {formData.postalCode ? `, ${formData.postalCode}` : ''}
+                        </span>
                       </div>
-                      <div className="order-item-details">
-                        <h4>{item.name}</h4>
-                        <div className="order-item-meta">
-                          <span className="order-item-price">{item.price} ₽</span>
-                          <span className="order-item-quantity">x {item.quantity}</span>
-                          <span className="order-item-total">{item.price * item.quantity} ₽</span>
+                    )}
+                    <div className="info-row">
+                      <span className="info-label">Способ оплаты:</span>
+                      <span className="info-value">
+                        {formData.paymentMethod === 'card' ? 'Оплата картой онлайн' : 'Оплата при получении'}
+                      </span>
+                    </div>
+                    {formData.notes && (
+                      <div className="info-row">
+                        <span className="info-label">Комментарий:</span>
+                        <span className="info-value">{formData.notes}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="form-section">
+                  <h2>Товары в заказе</h2>
+                  <div className="cart-items">
+                    {cartItems.map(item => (
+                      <div key={item.id} className="cart-item">
+                        <div className="item-image">
+                          <img 
+                            src={formatImageUrl(item.image_url)} 
+                            alt={item.name}
+                            onError={handleImageError}
+                          />
+                        </div>
+                        <div className="item-info">
+                          <h3 className="item-name">{item.name}</h3>
+                          <div className="item-details">
+                            <span className="item-quantity">{item.quantity} шт.</span>
+                            <span className="item-price">{(item.price * item.quantity).toLocaleString()} ₽</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="customer-info">
-                  <h3>Данные получателя</h3>
-                  <p><strong>ФИО:</strong> {formData.firstName} {formData.lastName}</p>
-                  <p><strong>Телефон:</strong> {formData.phone}</p>
-                  <p><strong>Email:</strong> {formData.email}</p>
-                </div>
-                
-                <div className="delivery-info">
-                  <h3>Доставка</h3>
-                  <p><strong>Способ получения:</strong> {formData.deliveryMethod === 'delivery' ? 'Доставка курьером' : 'Самовывоз'}</p>
-                  {formData.deliveryMethod === 'delivery' && (
-                    <>
-                      <p><strong>Адрес:</strong> {formData.address}</p>
-                      <p><strong>Город:</strong> {formData.city}</p>
-                      <p><strong>Индекс:</strong> {formData.postalCode}</p>
-                    </>
-                  )}
-                  {formData.deliveryMethod === 'pickup' && (
-                    <p><strong>Адрес самовывоза:</strong> ул. Цветочная, 1</p>
-                  )}
-                </div>
-                
-                <div className="payment-info">
-                  <h3>Оплата</h3>
-                  <p><strong>Способ оплаты:</strong> {formData.paymentMethod === 'card' ? 'Банковская карта' : 'Наличные при получении'}</p>
-                </div>
-                
-                {formData.notes && (
-                  <div className="notes-info">
-                    <h3>Комментарий к заказу</h3>
-                    <p>{formData.notes}</p>
-                  </div>
-                )}
-                
-                <div className="order-total">
-                  <div className="order-total-row">
-                    <span>Товары ({cartItems.reduce((acc, item) => acc + item.quantity, 0)})</span>
-                    <span>{getTotalPrice()} ₽</span>
-                  </div>
-                  <div className="order-total-row">
-                    <span>Доставка</span>
-                    <span>{deliveryPrice} ₽</span>
-                  </div>
-                  <div className="order-total-row final">
-                    <span>Итого</span>
-                    <span>{totalPrice} ₽</span>
+                    ))}
                   </div>
                 </div>
-                
-                <div className="form-buttons">
-                  <button type="button" className="btn secondary" onClick={prevStep}>Назад</button>
+
+                <div className="order-totals">
+                  <div className="total-row">
+                    <span>Стоимость товаров:</span>
+                    <span>{getTotalPrice().toLocaleString()} ₽</span>
+                  </div>
+                  <div className="total-row">
+                    <span>Доставка:</span>
+                    <span>{deliveryPrice.toLocaleString()} ₽</span>
+                  </div>
+                  <div className="total-row grand-total">
+                    <span>Итого к оплате:</span>
+                    <span>{totalPrice.toLocaleString()} ₽</span>
+                  </div>
+                </div>
+
+                <div className="form-actions">
+                  <button type="button" className="btn btn-secondary" onClick={prevStep}>Назад</button>
                   <button 
                     type="submit" 
-                    className="btn primary" 
+                    className="btn btn-primary"
                     disabled={loading}
                   >
                     {loading ? 'Оформление...' : 'Оформить заказ'}
@@ -507,31 +545,34 @@ const CheckoutPage = () => {
         </div>
 
         <div className="checkout-sidebar">
-          <div className="checkout-summary-card">
+          <div className="order-summary-box">
             <h2>Ваш заказ</h2>
-            <div className="checkout-summary-items">
-              {cartItems.map((item) => (
-                <div key={item.id} className="checkout-summary-item">
-                  <div className="checkout-item-info">
-                    <span className="checkout-item-quantity">{item.quantity} ×</span>
-                    <span className="checkout-item-name">{item.name}</span>
-                  </div>
-                  <span className="checkout-item-price">{item.price * item.quantity} ₽</span>
-                </div>
-              ))}
-            </div>
-            <div className="checkout-summary-totals">
-              <div className="summary-row">
-                <span>Товары ({cartItems.reduce((acc, item) => acc + item.quantity, 0)})</span>
-                <span>{getTotalPrice()} ₽</span>
+            <div className="cart-summary">
+              <div className="cart-items-count">
+                {cartItems.length} {cartItems.length === 1 ? 'товар' : 
+                  cartItems.length >= 2 && cartItems.length <= 4 ? 'товара' : 'товаров'}
               </div>
-              <div className="summary-row">
-                <span>Доставка</span>
-                <span>{deliveryPrice} ₽</span>
+              <ul className="cart-items-list">
+                {cartItems.map(item => (
+                  <li key={item.id} className="cart-item-minimal">
+                    <span className="item-name">{item.name}</span>
+                    <span className="item-quantity-price">
+                      {item.quantity} шт. × {item.price.toLocaleString()} ₽
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="cart-subtotal">
+                <span>Товары:</span>
+                <span>{getTotalPrice().toLocaleString()} ₽</span>
               </div>
-              <div className="summary-total">
-                <span>Итого</span>
-                <span>{totalPrice} ₽</span>
+              <div className="cart-delivery">
+                <span>Доставка:</span>
+                <span>{deliveryPrice.toLocaleString()} ₽</span>
+              </div>
+              <div className="cart-total">
+                <span>Итого:</span>
+                <span>{totalPrice.toLocaleString()} ₽</span>
               </div>
             </div>
           </div>

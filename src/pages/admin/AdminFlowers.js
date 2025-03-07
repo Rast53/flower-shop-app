@@ -35,31 +35,122 @@ const AdminFlowers = () => {
   // Загрузка данных с сервера
   const loadData = async () => {
     try {
+      console.log('Начинаем загрузку данных цветов...');
       setLoading(true);
       
-      // Загрузка цветов
+      // Проверяем токен авторизации
+      const token = localStorage.getItem('authToken');
+      const isAdminFlag = localStorage.getItem('user_is_admin');
+      
+      console.log('Текущий статус авторизации:', { 
+        token: token ? 'Присутствует' : 'Отсутствует',
+        isAdmin: isAdminFlag
+      });
+      
+      if (!token) {
+        console.error('Токен авторизации отсутствует. Перенаправляем на страницу входа.');
+        navigate('/admin/login');
+        return;
+      }
+      
+      // Загрузка цветов с подробным логированием
+      console.log('Запрос на получение цветов с параметрами:', {
+        page: currentPage,
+        category_id: categoryFilter || undefined,
+        is_available: stockFilter !== 'all' ? stockFilter === 'in-stock' : undefined
+      });
+      
       const response = await api.flowers.getAll({
         page: currentPage,
         category_id: categoryFilter || undefined,
         is_available: stockFilter !== 'all' ? stockFilter === 'in-stock' : undefined
       });
       
+      console.log('Получен ответ от API:', response);
+      
+      // Определяем правильную структуру ответа для цветов
+      let flowersData = null;
+      let paginationData = null;
+      
       if (response.data && response.data.data && response.data.data.flowers) {
-        setFlowers(response.data.data.flowers);
-        setTotalPages(response.data.data.pagination?.totalPages || 1);
+        // Формат: { data: { data: { flowers: [...], pagination: {...} } } }
+        console.log('Формат цветов: вложенные объекты');
+        flowersData = response.data.data.flowers;
+        paginationData = response.data.data.pagination;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        // Формат: { data: [...цветы] }
+        console.log('Формат цветов: массив в data');
+        flowersData = response.data.data;
+        paginationData = response.data.pagination;
+      } else if (response.data && Array.isArray(response.data)) {
+        // Формат: прямой массив
+        console.log('Формат цветов: прямой массив');
+        flowersData = response.data;
+      } else if (response.data && response.data.flowers) {
+        // Формат: { data: { flowers: [...] } }
+        console.log('Формат цветов: объект с flowers');
+        flowersData = response.data.flowers;
+        paginationData = response.data.pagination;
+      }
+      
+      if (flowersData && Array.isArray(flowersData)) {
+        console.log('Получены данные о цветах:', flowersData.length);
+        setFlowers(flowersData);
+        if (paginationData) {
+          setTotalPages(paginationData.totalPages || 1);
+        } else {
+          // Если нет данных о пагинации, устанавливаем 1 страницу
+          setTotalPages(1);
+          console.log('Данные о пагинации отсутствуют, установлена 1 страница');
+        }
+      } else {
+        console.warn('Неверный формат данных в ответе API:', response.data);
       }
       
       // Загрузка категорий для фильтра
       if (categories.length === 0) {
+        console.log('Загружаем категории...');
         const categoriesResponse = await api.categories.getAll();
-        if (categoriesResponse.data && categoriesResponse.data.data && categoriesResponse.data.data.categories) {
-          setCategories(categoriesResponse.data.data.categories);
+        console.log('Ответ с категориями:', categoriesResponse);
+        
+        // Определяем правильную структуру ответа
+        // Проверяем все возможные форматы ответа
+        let categoriesData = null;
+        
+        if (categoriesResponse.data && Array.isArray(categoriesResponse.data.data)) {
+          // Формат: { data: [...категории] }
+          console.log('Формат категорий: массив в data');
+          categoriesData = categoriesResponse.data.data;
+        } else if (categoriesResponse.data && categoriesResponse.data.data && categoriesResponse.data.data.categories) {
+          // Формат: { data: { data: { categories: [...] } } }
+          console.log('Формат категорий: вложенные объекты');
+          categoriesData = categoriesResponse.data.data.categories;
+        } else if (categoriesResponse.data && Array.isArray(categoriesResponse.data)) {
+          // Формат: прямой массив в data
+          console.log('Формат категорий: прямой массив');
+          categoriesData = categoriesResponse.data;
+        }
+        
+        if (categoriesData && Array.isArray(categoriesData)) {
+          console.log('Получены категории:', categoriesData.length);
+          setCategories(categoriesData);
+        } else {
+          console.warn('Неверный формат данных категорий:', categoriesResponse.data);
         }
       }
       
       setLoading(false);
     } catch (error) {
       console.error('Ошибка загрузки данных:', error);
+      
+      // Проверяем, связана ли ошибка с авторизацией
+      if (error.response && error.response.status === 401) {
+        console.error('Ошибка авторизации (401). Перенаправляем на страницу входа.');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user_is_admin');
+        navigate('/admin/login');
+      }
+      
       setLoading(false);
     }
   };
@@ -88,7 +179,32 @@ const AdminFlowers = () => {
 
   // Переход к странице редактирования цветка
   const handleEditFlower = (id) => {
-    navigate(`/admin/flowers/edit/${id}`);
+    try {
+      console.log('AdminFlowers: Переход к редактированию цветка с ID:', id);
+      
+      // Проверяем токен перед редактированием
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.error('AdminFlowers: Отсутствует токен авторизации для редактирования');
+        alert('Ошибка авторизации. Пожалуйста, войдите снова.');
+        navigate('/admin/login');
+        return;
+      }
+      
+      // Предварительно проверяем, что цветок существует
+      const flower = flowers.find(f => f.id === id);
+      if (!flower) {
+        console.error('AdminFlowers: Цветок с ID', id, 'не найден в списке');
+        alert('Цветок не найден. Возможно, он был удален.');
+        return;
+      }
+      
+      // Переход на страницу редактирования
+      navigate(`/admin/flowers/edit/${id}`);
+    } catch (error) {
+      console.error('AdminFlowers: Ошибка при переходе к редактированию цветка:', error);
+      alert('Произошла ошибка. Пожалуйста, попробуйте снова.');
+    }
   };
 
   // Обработка удаления цветка
@@ -206,6 +322,7 @@ const AdminFlowers = () => {
                       src={formatImageUrl(flower.image_url)} 
                       alt={flower.name}
                       onError={handleImageError}
+                      className="flower-thumbnail-img"
                     />
                   </td>
                   <td>{flower.name}</td>
