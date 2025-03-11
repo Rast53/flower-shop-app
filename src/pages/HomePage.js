@@ -75,7 +75,7 @@ const HomePage = () => {
   return (
     <div className="home-page">
       {/* Героический баннер */}
-      <section className="hero-section">
+      {/* <section className="hero-section">
         <div className="hero-content">
           <h1 className="hero-title">Свежие цветы для особых моментов</h1>
           <p className="hero-subtitle">
@@ -90,7 +90,7 @@ const HomePage = () => {
             </Link>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Основные услуги */}
       <section className="services-section">
@@ -117,7 +117,7 @@ const HomePage = () => {
       </section>
 
       {/* Категории цветов */}
-      <section className="categories-section">
+      {/* <section className="categories-section">
         <h2 className="section-title">Категории цветов</h2>
         <div className="categories-grid">
           {categories.length > 0 ? (
@@ -141,7 +141,7 @@ const HomePage = () => {
             <p className="no-items-message">Категории загружаются...</p>
           )}
         </div>
-      </section>
+      </section> */}
 
       {/* Популярные товары */}
       <section className="popular-flowers-section">
@@ -200,7 +200,7 @@ const HomePage = () => {
           </Link>
         </div>
         <div className="custom-bouquet-image">
-          {/* Здесь можно добавить изображение, показывающее процесс создания букета */}
+          <img src="https://storage.yandexcloud.net/flower-shop-images/flowers/Sborka.jpg" alt="Процесс создания букета" className="custom-bouquet-image" />
         </div>
       </section>
 

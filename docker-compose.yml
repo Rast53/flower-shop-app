@@ -34,7 +34,7 @@ services:
       - /volume2/cert/fullchain.pem:/app/fullchain.pem
       - /volume2/cert/privkey.pem:/app/privkey.pem
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - USE_HTTP=true
     networks:
       - flower-network

@@ -230,7 +230,7 @@ const CatalogPage = () => {
         <h1>Каталог цветов</h1>
         <p>Выбирайте из нашей коллекции свежих цветов и букетов</p>
         {/* Отладочная информация */}
-        {process.env.NODE_ENV === 'development' && (
+        {process.env.NODE_ENV === 'production' && (
           <div className="debug-info" style={{ fontSize: '12px', color: '#666', marginTop: '10px', padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '5px' }}>
             <p><strong>Отладочная информация:</strong></p>
             <p>Активная категория: {activeCategory} (тип: {typeof activeCategory})</p>
@@ -254,7 +254,7 @@ const CatalogPage = () => {
       
       <div className="catalog-content">
         {/* Боковая панель с фильтрами */}
-        <aside className="catalog-sidebar">
+        {/* <aside className="catalog-sidebar">
           <div className="filter-section">
             <h3>Категории</h3>
             <ul className="category-filters">
@@ -307,7 +307,7 @@ const CatalogPage = () => {
               </div>
             </div>
           </div>
-        </aside>
+        </aside> */}
         
         {/* Основной контент с товарами */}
         <div className="catalog-main">

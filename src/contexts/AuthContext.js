@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       // Проверяем состояние debugging
-      const debugEnabled = process.env.NODE_ENV === 'development';
+      const debugEnabled = process.env.NODE_ENV === 'production';
       if (debugEnabled) {
         console.log('AUTH CONTEXT DEBUG MODE:', { 
           token: localStorage.getItem('authToken'),
